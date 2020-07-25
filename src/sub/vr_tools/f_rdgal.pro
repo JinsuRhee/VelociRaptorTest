@@ -1,24 +1,10 @@
-Pro f_rdgal, gal, settings, n_snap, Gprop, mrange=mrange
+FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange
 
 	dir	= Settings.dir_save + $
 		'VR_Galaxy/snap_' + string(n_snap,format='(I3.3)') + '/'
-	;flist	= file_search(dir + 'GAL_*')
-
-        ;ftr_name	= Settings.root_path + 'src/sub/fortran/f_rdgal.so'
-	;larr = lonarr(20) & darr = dblarr(20)
-	;	larr(0)	= n_snap
-	;	larr(1) = Settings.num_thread
-	;	larr(2) = n_elements(flist)	;; # of Galaxies
-	;	larr(10)= strlen(dir)
-
-	;void	= call_external(ftr_name, 'f_rdgal', $
-	;	larr, darr, dir)
-
-	;stop
 
 	flist	= file_search(dir + 'GAL_*')
 	n_gal	= n_elements(flist)
-
 
 	;;-----
 	;; Mass Cut
@@ -52,14 +38,18 @@ Pro f_rdgal, gal, settings, n_snap, Gprop, mrange=mrange
 	nn	= n_elements(cut)
 
 	For i=0L, n_elements(Gprop) - 1L DO BEGIN
-	       tmp	= Gprop(i) + ' = dblarr(nn)'
-	       if Gprop(i) eq 'ID' then $
+		tmp	= Gprop(i) + ' = dblarr(nn)'
+		if Gprop(i) eq 'ID' then $
 		       tmp = Gprop(i) + ' = lonarr(nn)'
 
-	       if Gprop(i) eq 'ABmag' then $
-		       tmp = Gprop(i) + ' = dblarr(nn, n_elements(settings.flux_list))'
+		if Gprop(i) eq 'ABmag' then $
+		       tmp = Gprop(i) + $
+		       ' = dblarr(nn, n_elements(settings.flux_list), n_elements(settings.P_VRrun_mag_r))'
 
-	       void	= execute(tmp)
+		IF Gprop(i) eq 'SFR' then $
+			tmp = Gprop(i) + $
+			' = dblarr(nn, n_elements(settings.P_VRrun_SFR_t))'
+		void	= execute(tmp)
 	EndFor
 
 	;;-----
@@ -79,7 +69,10 @@ Pro f_rdgal, gal, settings, n_snap, Gprop, mrange=mrange
 			tmp	= Gprop(j) + '(indG) = H5D_READ(did)'
 
 			if Gprop(j) eq 'ABmag' then $
+				tmp	= Gprop(j) + '(indG,*,*) = H5D_READ(did)'
+			if Gprop(j) eq 'SFR' then $
 				tmp	= Gprop(j) + '(indG,*) = H5D_READ(did)'
+
 			void	= execute(tmp)
 			H5D_close, did
 		Endfor
@@ -111,7 +104,12 @@ Pro f_rdgal, gal, settings, n_snap, Gprop, mrange=mrange
 		void	= execute(tmp)
 	Endfor
 
-	GP	= create_struct(GP,'Domain_List', d_list, 'Flux_List', f_list)
+	GP	= create_struct(GP,'Domain_List', d_list, 'Flux_List', f_list, $
+		'SFR_R', settings.P_VRrun_SFR_R, 'SFR_T', settings.P_VRrun_SFR_t, $
+		'MAG_R', settings.P_VRrun_MAG_R)
+
 	gal	= GP
+
+	RETURN, gal
 
 End
