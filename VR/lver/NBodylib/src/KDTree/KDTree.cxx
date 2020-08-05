@@ -15,6 +15,10 @@
 
 #include <KDTree.h>
 
+typedef std::pair<double, int> js_temp;
+
+bool comparator (const js_temp& l, const js_temp& r){return l.first < r.first;}
+
 namespace NBody
 {
 
@@ -535,7 +539,62 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
             if (ikeepinputorder) irearrangeandbalance=false;
             Int_t k = start + (size - 1) / 2;
             int splitdim = DetermineSplitDim(start, end, bnd, otp);
-            Double_t splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
+            //Double_t splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
+	    Double_t splitvalue; 
+	    
+	    //%123123
+	    // Split the node by the position of a particle of which the inter particle distance is maximum
+	    // This routine is first sort the particle position and then
+	    // find a particle with the maximum inter particle distance of which d(N+1, N-1) is maximum
+	    // N varies within [size / 4, 3*size / 4]
+	    //
+
+	    // only when the tree is spartially structured
+	    if(treetype==TPHYS){
+
+		    vector<js_temp> js_array; // [Position, index] Vector
+		    Particle *js_bucket;
+
+		    int js_nn = 0;
+
+		    js_bucket = new Particle[end-start];
+
+		    //Sorting particle
+		    for(int js_ind=start; js_ind<end; js_ind++){
+			    js_array.push_back(js_temp(bucket[js_ind].GetPosition(splitdim), js_nn));
+			    js_nn++;
+		    }
+
+		    stable_sort(js_array.begin(), js_array.end(), comparator);
+
+		    for(int js_nn=0; js_nn<end-start; js_nn++) js_bucket[js_nn] = bucket[js_nn + start];
+		    for(int js_nn=0; js_nn<end-start; js_nn++) bucket[js_nn + start] = js_bucket[js_array[js_nn].second];
+
+		    delete[] js_bucket;
+		    js_array.clear();
+		    vector<js_temp>().swap(js_array);
+
+		    //Find the particle with the maximum inter-particle distance
+
+		    double js_dx = 0;
+		    double js_dx2;
+		    js_nn = (end - start)/4;
+
+		    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
+			    js_dx2 = bucket[js_ind+1].GetPosition(splitdim) - bucket[js_ind-1].GetPosition(splitdim);
+			    if(js_dx2 > js_dx){
+				    js_dx = js_dx2;
+				    k = js_ind;
+				    splitvalue = bucket[k].GetPosition(splitdim);
+			    }
+		    }
+	    }
+	    else{
+		    splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
+	    }
+
+	    //%123123
+
              //run the node construction in parallel
             if (ibuildinparallel && otp.nactivethreads > 1) {
                 //note that if OpenMP not defined then ibuildinparallel is false

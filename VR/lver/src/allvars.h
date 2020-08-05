@@ -927,7 +927,7 @@ struct Options
 
         fname=outname=smname=pname=gname=outname=NULL;
 
-        Bsize=2048;
+        Bsize=1024;
         Nvel=32;
         Nsearch=256;
         Ncellfac=0.01;

@@ -120,9 +120,9 @@ Int_t OpenMPLocalSearch(Options &opt,
 
     /////
     for (i=0; i<numompregions;i++) {
-	    cout<<" -123123 X : "<<i<<" : "<<ompdomain[i].bnd[0][0]<<" ~ "<<ompdomain[i].bnd[0][1]<<endl;
-	    cout<<" -123123 Y : "<<i<<" : "<<ompdomain[i].bnd[1][0]<<" ~ "<<ompdomain[i].bnd[1][1]<<endl;
-	    cout<<" -123123 Z : "<<i<<" : "<<ompdomain[i].bnd[2][0]<<" ~ "<<ompdomain[i].bnd[2][1]<<endl;
+	    cout<<" -123123 X : "<<i<<" : "<<ompdomain[i].bnd[0][0]<<" ~ "<<ompdomain[i].bnd[0][1]<<" // "<<ompdomain[i].ncount<<endl;
+	    cout<<" -123123 Y : "<<i<<" : "<<ompdomain[i].bnd[1][0]<<" ~ "<<ompdomain[i].bnd[1][1]<<" // "<<ompdomain[i].ncount<<endl;
+	    cout<<" -123123 Z : "<<i<<" : "<<ompdomain[i].bnd[2][0]<<" ~ "<<ompdomain[i].bnd[2][1]<<" // "<<ompdomain[i].ncount<<endl;
 
     }
     //int ompminsize2=0;
@@ -150,8 +150,8 @@ Int_t OpenMPLocalSearch(Options &opt,
         ngtot += ng;
 
 		cout<<"		%123123 - OMP FOF SEARCH REPORT - "<<endl;
-		cout<<"			Task / Index / NOMP / Nptcls / Elapsed Time"<<endl;
-		cout<<"			"<<ThisTask<<" / "<<i<<" / "<<numompregions<<" / "<<ompdomain[i].ncount<<" / "<<MyGetTime() - time00<<endl;
+		cout<<"			Task / Index / NOMP / Nptcls / Ngroups / Elapsed Time"<<endl;
+		cout<<"			"<<ThisTask<<" / "<<i<<" / "<<numompregions<<" / "<<ompdomain[i].ncount<<" / "<<ng<<" / "<<MyGetTime() - time00<<endl;
     }
     }
     cout<<ThisTask<<" finished local search "<<ngtot<<" in "<<MyGetTime()-time1<<endl;

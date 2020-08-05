@@ -61,25 +61,25 @@ ENDIF ELSE BEGIN
 	restore, settings.root_path + 'test/vr_test/test4*/log.sav'
 ENDELSE
 
-;runtime	= dblarr(8)
-;	runtime(5)	= 2268.
-;	runtime(3)	= 3479.97
-;	runtime(0)	= 4329.03
-;	runtime(7)	= 4677.78
-;	runtime(1)	= 6825.44
-;	runtime(6)	= 7853.25
-;	runtime(2)	= 10414.28
-;	runtime(4)	= 11478.03
-;runtime	= alog10(runtime)
-;
-;time	= list.(numdom).t
-;time	= alog10(time)
-;yy	= histogram(time, min=1., max=5., binsize=1., location=xx)
-;xx	= xx - 0.5
-;cgPlot, xx, yy, psym=10, thick=2
-;cgOplot, [runtime(numdom), runtime(numdom)], [0., max(yy)], linestyle=2, thick=2
-;
-;stop
+runtime	= dblarr(8)
+	runtime(5)	= 2268.
+	runtime(3)	= 3479.97
+	runtime(0)	= 4329.03
+	runtime(7)	= 4677.78
+	runtime(1)	= 6825.44
+	runtime(6)	= 7853.25
+	runtime(2)	= 10414.28
+	runtime(4)	= 11478.03
+runtime	= alog10(runtime)
+
+time	= list.(numdom).t
+time	= alog10(time)
+yy	= histogram(time, min=1., max=5., binsize=1., location=xx)
+xx	= xx - 0.5
+cgPlot, xx, yy, psym=10, thick=2
+cgOplot, [runtime(numdom), runtime(numdom)], [0., max(yy)], linestyle=2, thick=2
+
+stop
 return, list
 
 END
