@@ -57,7 +57,7 @@ FUNCTION f_rdptcl, settings, gid, $
 	;; Get Ptcl
 	;;-----
 	IF ~KEYWORD_SET(raw) THEN BEGIN
-		ftr_name	= dir_lib + 'get_ptcl.so'
+		ftr_name	= dir_lib + 'sub_ftn/get_ptcl.so'
 			larr = lonarr(20) & darr = dblarr(20)
 			larr(0) = n_ptcl
 			larr(1) = n_elements(dlist)
