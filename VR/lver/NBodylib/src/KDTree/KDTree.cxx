@@ -550,7 +550,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 	    //
 
 	    // only when the tree is spartially structured
-	    if(treetype==TPHYS){
+	    if(treetype==TPHYS || treetype==TPHS){
 
 		    vector<js_temp> js_array; // [Position, index] Vector
 		    Particle *js_bucket;
