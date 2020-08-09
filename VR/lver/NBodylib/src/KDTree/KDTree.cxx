@@ -561,7 +561,8 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 
 		    //Sorting particle
 		    for(int js_ind=start; js_ind<end; js_ind++){
-			    js_array.push_back(js_temp(bucket[js_ind].GetPosition(splitdim), js_nn));
+			    if(treetype == TPHYS) js_array.push_back(js_temp(bucket[js_ind].GetPosition(splitdim), js_nn));
+			    if(treetype == TPHS) js_array.push_back(js_temp(bucket[js_ind].GetPhase(splitdim), js_nn));
 			    js_nn++;
 		    }
 
@@ -579,13 +580,17 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 		    double js_dx = 0;
 		    double js_dx2;
 		    js_nn = (end - start)/4;
+		    if(treetype == TPHS) js_nn = (end - start) / 8;
 
 		    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
-			    js_dx2 = bucket[js_ind+1].GetPosition(splitdim) - bucket[js_ind-1].GetPosition(splitdim);
+			    if(treetype == TPHYS) js_dx2 = bucket[js_ind+1].GetPosition(splitdim) - bucket[js_ind-1].GetPosition(splitdim);
+			    if(treetype == TPHS) js_dx2 = bucket[js_ind+1].GetPhase(splitdim) - bucket[js_ind-1].GetPhase(splitdim);
+			    js_dx2 = abs(js_dx2);
 			    if(js_dx2 > js_dx){
 				    js_dx = js_dx2;
 				    k = js_ind;
-				    splitvalue = bucket[k].GetPosition(splitdim);
+				    if(treetype == TPHYS) splitvalue = bucket[k].GetPosition(splitdim);
+				    if(treetype == TPHS) splitvalue = bucket[k].GetPhase(splitdim);
 			    }
 		    }
 	    }

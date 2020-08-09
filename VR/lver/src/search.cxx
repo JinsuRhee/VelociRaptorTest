@@ -607,12 +607,15 @@ private(i,vscale2,mtotregion,vx,vy,vz,vmean)
     ngomp=new Int_t[iend+1];
     for (i=0;i<=iend;i++) {pfofomp[i]=NULL;ngomp[i]=0;}
     Double_t xscaling, vscaling;
+    int js_ind = iend/100;
+    int js_Bsize = 128;
+    double js_time;
     //run search if 3DFOF found
     if (numgroups > 0)
     {
 #ifdef USEOPENMP
 #pragma omp parallel default(shared) \
-private(i,tid,xscaling,vscaling)
+private(i,tid,xscaling,vscaling,js_time)
 {
 #pragma omp for schedule(dynamic,1) nowait
 #endif
@@ -622,6 +625,7 @@ private(i,tid,xscaling,vscaling)
 #else
             tid=0;
 #endif
+	    js_time = MyGetTime();
             //if adaptive 6dfof, set params
             if (opt.fofbgtype==FOF6DADAPTIVE) paramomp[2+tid*20]=paramomp[7+tid*20]=vscale2array[i];
             //scale particle positions
@@ -631,12 +635,13 @@ private(i,tid,xscaling,vscaling)
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
             }
             xscaling=1.0/xscaling;vscaling=1.0/vscaling;
-            treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
+            treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],js_Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
             delete treeomp[tid];
             for (Int_t j=0;j<numingroup[i];j++) {
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
             }
+	    cout<<"%123123 - "<<i<<" // "<<iend<<" // "<<numingroup[i]<<" // "<<js_Bsize<<" // "<<MyGetTime() - js_time<<" // "<<endl;
         }
 #ifdef USEOPENMP
 }
