@@ -1000,6 +1000,7 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
     Int_tree_t *GroupTail, *Head, *Next;
     Int_t bgoffset, *pfofbg, numgroupsbg=0;
     int maxhalocoresublevel;
+    int js_Bsize = 32;
     Int_t numsubs=0;
     //initialize
     numgroups=0;
@@ -1097,7 +1098,8 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
         cout<<"FOF6DCORE which identifies phase-space dense regions and assigns particles, ie core identification and growth\n";
         }
         //just build tree and initialize the pfof array
-        tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        //tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        tree=new KDTree(Partsubset,nsubset,js_Bsize,tree->TPHYS);
         numgroups=0;
         pfof=new Int_t[nsubset];
         for (i=0;i<nsubset;i++) pfof[i]=0;
@@ -1107,7 +1109,8 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
     //@{
     if (!(opt.foftype==FOFSTPROBNN||opt.foftype==FOFSTPROBNNLX||opt.foftype==FOFSTPROBNNNODIST||opt.foftype==FOF6DCORE)) {
         if (opt.iverbose>=2) cout<<"Building tree ... "<<endl;
-        tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        //tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        tree=new KDTree(Partsubset,nsubset,js_Bsize,tree->TPHYS);
         param[0]=tree->GetTreeType();
         //if large enough for statistically significant structures to be found then search. This is a robust search
         if (nsubset>=MINSUBSIZE) {
@@ -1126,7 +1129,8 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
         //then examine first tagged particle that meets critera by examining its NN and so on till reach particle where all NN are either already tagged or do not meet criteria
         //delete tree;
         if (opt.iverbose>=2) cout<<"Building tree ... "<<endl;
-        tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,1);
+        //tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,1);
+        tree=new KDTree(Partsubset,nsubset,js_Bsize,tree->TPHYS,tree->KEPAN,1000,1);
         if (opt.iverbose>=2) cout<<"Finding nearest neighbours"<<endl;
         nnID=new Int_t*[nsubset];
         for (i=0;i<nsubset;i++) nnID[i]=new Int_t[nsearch];
@@ -1415,7 +1419,8 @@ private(i,tid)
             GetOutliersValues(opt,nsubset,Partsubset,-1);
         }
         ///produce tree to search for 6d phase space structures
-        tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        //tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        tree=new KDTree(Partsubset,nsubset,js_Bsize,tree->TPHYS);
 
         //now begin fof6d search for large background objects that are missed using smaller grid cells ONLY IF substructures have been found
         //this search can identify merger excited radial shells so for the moment, disabled

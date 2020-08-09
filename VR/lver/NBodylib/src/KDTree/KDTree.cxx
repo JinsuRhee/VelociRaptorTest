@@ -579,8 +579,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 
 		    double js_dx = 0;
 		    double js_dx2;
-		    js_nn = (end - start)/4;
-		    if(treetype == TPHS) js_nn = (end - start) / 8;
+		    js_nn = b/2;
 
 		    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
 			    if(treetype == TPHYS) js_dx2 = bucket[js_ind+1].GetPosition(splitdim) - bucket[js_ind-1].GetPosition(splitdim);
