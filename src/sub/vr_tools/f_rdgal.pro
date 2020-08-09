@@ -84,9 +84,20 @@ FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange
 		d_list(i,*) = H5D_READ(did)
 		H5D_close, did
 
-		did	= H5D_open(fid, '/Flux_List')
-		f_list	= H5D_READ(did)
+		IF i EQ 0L THEN rate = fltarr(n_gal)
+		did	= H5D_OPEN(fid, '/rate')
+		rate(i)	= H5D_READ(did)
 		H5D_close, did
+
+		IF i EQ 0L THEN BEGIN
+			did	= H5D_open(fid, '/Flux_List')
+			f_list	= H5D_READ(did)
+			H5D_close, did
+
+			did	= H5D_open(fid, '/Aexp')
+			aexp	= H5D_READ(did)
+			H5D_close, did
+		ENDIF
 
 		H5F_close, fid
 		indG ++
@@ -104,7 +115,8 @@ FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange
 		void	= execute(tmp)
 	Endfor
 
-	GP	= create_struct(GP,'Domain_List', d_list, 'Flux_List', f_list, $
+	GP	= create_struct(GP, 'rate', rate, $
+		'Aexp', mean(aexp), 'Domain_List', d_list, 'Flux_List', f_list, $
 		'SFR_R', settings.P_VRrun_SFR_R, 'SFR_T', settings.P_VRrun_SFR_t, $
 		'MAG_R', settings.P_VRrun_MAG_R)
 

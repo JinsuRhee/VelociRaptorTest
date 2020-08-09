@@ -15,6 +15,7 @@ void rv_match(int argc, void *argv[])
   long *ind_b, *ind_u;
   double *xp, *vp, *zp, *ap, *mp;
   long *dom_list;
+  float *rate;
 
   STRING *dir_raw; 
   int *larr;
@@ -32,9 +33,9 @@ void rv_match(int argc, void *argv[])
   zp		= (double *) argv[8];
   ap		= (double *) argv[9];
   mp		= (double *) argv[10];
-  dom_list	= (long *) argv[11];
+  rate		= (float *) argv[11];
+  dom_list	= (long *) argv[12];
 
   //printf("%s", dir_raw->s);
 
-  rv_match_(larr, darr, dir_raw->s, id, ind_b, ind_u, xp, vp, zp, ap, mp, dom_list);   /* Compute sum */
-}
+  rv_match_(larr, darr, dir_raw->s, id, ind_b, ind_u, xp, vp, zp, ap, mp, rate, dom_list);   /* Compute sum */}

@@ -2,7 +2,7 @@
       Subroutine rv_match (larr, darr,  &
                 dir_raw, &
                 ID, ind_b, ind_u, xp, vp, zp, ap, mp, &
-                dom_list)
+                rate, dom_list)
 
       USE omp_lib
 
@@ -15,6 +15,8 @@
       Real(kind=8) xp(larr(1),3), vp(larr(1),3)
       Real(kind=8) zp(larr(1)), ap(larr(1)), mp(larr(1))
       Integer(kind=4) dom_list(larr(2),larr(5))
+
+      REAL(kind=4) rate(larr(2))
 
       Character*(larr(11)) dir_raw
 
@@ -31,7 +33,7 @@
       !Real(kind=8), dimension(:,:), allocatable :: xp_g, vp_g
       !Real(kind=8), dimension(:), allocatable :: ap_g, zp_g, mp_g
 
-      Integer(kind=4) dumi(4)!, gind, dumi2
+      Integer(kind=4) dumi(4), ind1, ind2, n0, n1
       Real(kind=8) dmp_mass, ptype
 
       n_ptcl    = larr(1)
@@ -182,6 +184,30 @@
       ENDDO
       !$OMP END PARALLEL DO
 
+      !!!!!-- Matching Rate
+      !$OMP PARALLEL DO default(shared) private(ind1, ind2, n0, n1, j) schedule(dynamic)
+      DO i=1, n_gal
+        ind1 = ind_b(i,1) + 1
+        ind2 = ind_b(i,2) + 1
+
+        n1 = 0
+        n0 = ind2 - ind1 + 1
+        DO j=ind1, ind2
+          IF(mp(j) .GT. -1.0d7) n1 = n1 + 1
+        ENDDO
+
+        ind1 = ind_u(i,1) + 1
+        ind2 = ind_u(i,2) + 1
+        n0 = n0 + ind2 - ind1 + 1
+        DO j=ind1, ind2
+          IF(mp(j) .GT. -1.0d7) n1 = n1 + 1
+        ENDDO
+
+        rate(i) = float(n1) / float(n0)
+      ENDDO
+      !$OMP END PARALLEL DO
+
+      !!!!!--
       RETURN
       End
 

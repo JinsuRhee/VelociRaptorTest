@@ -24,6 +24,8 @@ Pro rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 	age_pt	= met_pt
 	mp_pt	= met_pt
 
+	rate	= fltarr(n_elements(output.id))
+
 	id_pt	= output.p_id
 	ind_b = output.b_ind & ind_u = output.u_ind
 
@@ -83,7 +85,7 @@ Pro rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 	void = call_external(ftr_name, 'rv_match', $
 		lset, dset, dir_raw, $
 		id_pt, ind_b, ind_u, pos_pt, vel_pt, $
-		met_pt, age_pt, mp_pt, $
+		met_pt, age_pt, mp_pt, rate, $
 		dom_list)
 
 
@@ -91,10 +93,12 @@ Pro rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
         vel_pt = vel_pt * siminfo.kms
         mp_pt  = mp_pt * siminfo.unit_m / 1.98892e33
 
+
 	output2	= create_struct('p_pos', pos_pt, $
 		'p_vel', vel_pt, 'p_age', age_pt, $
 		'p_met', met_pt, 'p_mass', mp_pt, $
-		'dom_list', dom_list)
+		'dom_list', dom_list, 'rate', rate, $
+		'a_exp', siminfo.aexp)
 
 	return
 End

@@ -76,6 +76,8 @@ Pro rv_save, output, dir_save=dir_save, horg=horg, num_thread=num_thread, $
                 ;simple_write_hdf5, iu(1)-iu(0)+1, 'P_Prop/P_Nubd',	fid
 
 		;;----- Write Other Information
+		simple_write_hdf5, output.rate(i), 'rate', fid
+		simple_write_hdf5, output.a_exp, 'Aexp', fid
 		simple_write_hdf5, output.dom_list(i,*), 'Domain_List', fid
 		simple_write_hdf5, flux_list, 'Flux_List', 	fid
 		simple_write_hdf5, output.SFR_R, 'SFR_R',		fid
