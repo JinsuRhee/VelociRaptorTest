@@ -530,6 +530,30 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
         {
             if (ibuildinparallel == false) numleafnodes++;
             for (int j=0;j<ND;j++) (this->*bmfunc)(j, start, end, bnd[j], otp);
+
+	    // -- JS --
+	    // Swap particles for the first particle to be the fartest one from the center of the leaf node.
+	    // This would help to skip the leaf node when doing FOF search.
+	    Double_t js_dd, js_dd2;
+	    Double_t js_pos[3], js_vel[3];
+	    for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (bnd[js_ii][1] + bnd[js_ii][0])/2.;
+	    if (ND==6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (bnd[js_ii+3][1] + bnd[js_ii+3][0])/2.;
+
+	    int js_ind = start;
+	    js_dd = -1.;
+	    for(int js_ii=start; js_ii<end; js_ii++){
+		    js_dd2 = DistanceSqd(bucket[js_ii].GetPosition(), js_pos);
+		    if(ND == 6) js_dd2 += DistanceSqd(bucket[js_ii].GetVelocity(), js_vel);
+		    if(js_dd2 > js_dd) {
+			    js_dd = js_dd2;
+			    js_ind = js_ii;
+		    }
+	    }
+
+	    swap(bucket[start], bucket[js_ind]);
+
+	    // -----
+	    
             return new LeafNode(id ,start, end,  bnd, ND);
         }
         else
@@ -538,11 +562,28 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
             bool irearrangeandbalance=true;
             if (ikeepinputorder) irearrangeandbalance=false;
             Int_t k = start + (size - 1) / 2;
-            int splitdim = DetermineSplitDim(start, end, bnd, otp);
+            //int splitdim = DetermineSplitDim(start, end, bnd, otp);
             //Double_t splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
+	    
+	    // -- JS --
+	    // Split the boundary by the dimension of which the range is the most wide.
+	    // This makes each leafnode become a qube so that the leaf node skip scheme works fine.
+	    int splitdim;
+	    Double_t js_dx3 = 0.;
+	    Double_t bnd2[6][2];
+	    for(int j=0;j<ND;j++) (this->*bmfunc)(j, start, end, bnd2[j], otp);
+	    for(int js_nn2=0; js_nn2<ND; js_nn2 ++){
+		    if(abs(bnd2[js_nn2][1] - bnd2[js_nn2][0]) > js_dx3){
+			    splitdim = js_nn2;
+			    js_dx3 = abs(bnd2[js_nn2][1] - bnd2[js_nn2][0]);
+		    }
+	    }
+
+	    // -----
+	    
 	    Double_t splitvalue; 
 	    
-	    //%123123
+	    // -- JS --
 	    // Split the node by the position of a particle of which the inter particle distance is maximum
 	    // This routine is first sort the particle position and then
 	    // find a particle with the maximum inter particle distance of which d(N+1, N-1) is maximum
@@ -579,7 +620,8 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 
 		    double js_dx = 0;
 		    double js_dx2;
-		    js_nn = b/2;
+		    js_nn = (end - start) / 16;
+		    if(js_nn ==0) js_nn ++;             // To Avoid very small leaf node
 
 		    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
 			    if(treetype == TPHYS) js_dx2 = bucket[js_ind+1].GetPosition(splitdim) - bucket[js_ind-1].GetPosition(splitdim);
@@ -597,7 +639,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 		    splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
 	    }
 
-	    //%123123
+	    // -----
 
              //run the node construction in parallel
             if (ibuildinparallel && otp.nactivethreads > 1) {

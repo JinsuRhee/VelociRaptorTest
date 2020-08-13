@@ -523,13 +523,31 @@ namespace NBody
         //this flag is initialized to !=0 and if entire bucket searched and all particles already linked,
         //then BucketFlag[nid]=1
         int flag=Head[bucket_start];
-        Double_t maxr0=0.,maxr1=0.;
-        for (int j=0;j<numdim;j++){
-            maxr0+=(bucket[target].GetPhase(j)-xbnd[j][0])*(bucket[target].GetPhase(j)-xbnd[j][0]);
-            maxr1+=(bucket[target].GetPhase(j)-xbnd[j][1])*(bucket[target].GetPhase(j)-xbnd[j][1]);
-        }
+
+        //Double_t maxr0=0.,maxr1=0.;
+        //for (int j=0;j<numdim;j++){
+        //    maxr0+=(bucket[target].GetPhase(j)-xbnd[j][0])*(bucket[target].GetPhase(j)-xbnd[j][0]);
+        //    maxr1+=(bucket[target].GetPhase(j)-xbnd[j][1])*(bucket[target].GetPhase(j)-xbnd[j][1]);
+        //}
+	
+	// -- JS --
+	// Alter the scheme for skipping the leaf node
+	Double_t js_pos[3], js_vel[3];  // Center of the leaf node
+	for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (xbnd[js_ii][1] + xbnd[js_ii][0])/2.;
+	if (numdim == 6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (xbnd[js_ii+3][1] + xbnd[js_ii+3][0])/2.;
+	Double_t js_dd, js_dd2;
+
+	js_dd = DistanceSqd(bucket[target].GetPosition(), js_pos);
+	if (numdim==6) js_dd += DistanceSqd(bucket[target].GetVelocity(), js_vel);        // Distance btw the target ptcl and the leaf node
+
+	js_dd2 = DistanceSqd(bucket[bucket_start].GetPosition(), js_pos);
+	if (numdim==6) js_dd2 += DistanceSqd(bucket[bucket_start].GetVelocity(), js_vel); // Distance btw the farthest ptcl in the leaf node and the leaf node centre
+	// -----
+
+
         //first check to see if entire node lies wihtin search distance
-        if (maxr0<fdist2&&maxr1<fdist2){
+        //if (maxr0<fdist2&&maxr1<fdist2){
+	if(js_dd + js_dd2 < fdist2){
             Int_t id;
             for (Int_t i = bucket_start; i < bucket_end; i++){
                 id=bucket[i].GetID();
