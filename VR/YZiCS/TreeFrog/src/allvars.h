@@ -229,7 +229,7 @@ using namespace NBody;
 #endif
 
 #ifdef TREEFROGLONGIDS
-typedef long IDTYPE;
+typedef long long IDTYPE;
 #elif defined(TREEFROGLONGUIDS)
 typedef long unsigned IDTYPE;
 #elif defined(TREEFROGINTIDS)

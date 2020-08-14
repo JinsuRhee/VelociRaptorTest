@@ -30,7 +30,7 @@ HaloData *ReadHaloData(string &infile, Int_t &numhalos)
 #endif
       double e,x,y,z,vx,vy,vz;
       for(j=0; j<Halo[i].NumberofParticles; j++){
-        fscanf(f, "%ld %lf %lf %lf %lf %lf %lf %lf",
+        fscanf(f, "%lld %lf %lf %lf %lf %lf %lf %lf",
                &(Halo[i].ParticleID[j]),
                &e,&x,&y,&z,&vx,&vy,&vz
              );
