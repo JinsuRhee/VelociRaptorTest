@@ -48,8 +48,7 @@ void OpenBinaryorAsciiFiles(string &infile, int ibinary, int numfiletypes, int k
     if (ifieldhalos) {
         fnamearray[itemp++]=fname4;fnamearray[itemp++]=fname5;fnamearray[itemp++]=fname6;
     }
-    //if (itypematch!=ALLTYPEMATCH) {
-    if (itypematch==ALLTYPEMATCH) {
+    if (itypematch!=ALLTYPEMATCH) {
         fnamearray[itemp++]=fname7;fnamearray[itemp++]=fname8;
         if (ifieldhalos) {
             fnamearray[itemp++]=fname9;fnamearray[itemp++]=fname10;
@@ -65,7 +64,6 @@ void OpenBinaryorAsciiFiles(string &infile, int ibinary, int numfiletypes, int k
             Fspart.open(fname5.c_str(),ios::in|ios::binary);
             Fsupart.open(fname6.c_str(),ios::in|ios::binary);
         }
-        //if (itypematch!=ALLTYPEMATCH) {
         if (itypematch!=ALLTYPEMATCH) {
             Fparttype.open(fname7.c_str(),ios::in|ios::binary);
             Fuparttype.open(fname8.c_str(),ios::in|ios::binary);
@@ -86,8 +84,7 @@ void OpenBinaryorAsciiFiles(string &infile, int ibinary, int numfiletypes, int k
             Fspart.open(fname5.c_str(),ios::in);
             Fsupart.open(fname6.c_str(),ios::in);
         }
-        //if (itypematch!=ALLTYPEMATCH) {
-        if (itypematch==ALLTYPEMATCH) {
+        if (itypematch!=ALLTYPEMATCH) {
             Fparttype.open(fname7.c_str(),ios::in);
             Fuparttype.open(fname8.c_str(),ios::in);
             if (ifieldhalos) {
@@ -104,8 +101,7 @@ void OpenBinaryorAsciiFiles(string &infile, int ibinary, int numfiletypes, int k
     if (ifieldhalos) {
         Farray[itemp++]=&Fsgroup;Farray[itemp++]=&Fspart;Farray[itemp++]=&Fsupart;
     }
-    //if (itypematch!=ALLTYPEMATCH) {
-    if (itypematch==ALLTYPEMATCH) {
+    if (itypematch!=ALLTYPEMATCH) {
         Farray[itemp++]=&Fparttype;Farray[itemp++]=&Fuparttype;
         if (ifieldhalos) {
             Farray[itemp++]=&Fsparttype;Farray[itemp++]=&Fsuparttype;
@@ -633,8 +629,7 @@ unsigned long MPIReadHaloGroupCatalogDataNum(string &infile, int mpi_ninput, int
     UInt_t *typeval;
     numfiletypes=3;
     if (ifieldhalos) numfiletypes+=3;
-    //if (itypematch!=ALLTYPEMATCH) {
-    if (itypematch==ALLTYPEMATCH) {
+    if (itypematch!=ALLTYPEMATCH) {
         numfiletypes+=2;
         if (ifieldhalos) numfiletypes+=2;
     }
@@ -731,8 +726,7 @@ unsigned long MPIReadHaloGroupCatalogDataParticleNum(string &infile, int mpi_nin
     UInt_t *typeval;
     numfiletypes=3;
     if (ifieldhalos) numfiletypes+=3;
-    //if (itypematch!=ALLTYPEMATCH) {
-    if (itypematch==ALLTYPEMATCH) {
+    if (itypematch!=ALLTYPEMATCH) {
         numfiletypes+=2;
         if (ifieldhalos) numfiletypes+=2;
     }
@@ -829,8 +823,7 @@ HaloData *MPIReadHaloGroupCatalogDataAllocation(string &infile, Int_t &numhalos,
     UInt_t *typeval;
     numfiletypes=3;
     if (ifieldhalos) numfiletypes+=3;
-    //if (itypematch!=ALLTYPEMATCH) {
-    if (itypematch==ALLTYPEMATCH) {
+    if (itypematch!=ALLTYPEMATCH) {
         numfiletypes+=2;
         if (ifieldhalos) numfiletypes+=2;
     }
@@ -971,8 +964,7 @@ void MPIReadHaloGroupCatalogData(string &infile, Int_t &numhalos, HaloData *&Hal
     UInt_t *typeval;
     numfiletypes=3;
     if (ifieldhalos) numfiletypes+=3;
-    //if (itypematch!=ALLTYPEMATCH) {
-    if (itypematch==ALLTYPEMATCH) {
+    if (itypematch!=ALLTYPEMATCH) {
         numfiletypes+=2;
         if (ifieldhalos) numfiletypes+=2;
     }
@@ -1350,8 +1342,7 @@ HaloData *ReadHaloGroupCatalogData(string &infile, Int_t &numhalos, int mpi_ninp
 #endif
     numfiletypes=3;
     if (ifieldhalos) numfiletypes+=3;
-    //if (itypematch!=ALLTYPEMATCH) {
-    if (itypematch==ALLTYPEMATCH) {
+    if (itypematch!=ALLTYPEMATCH) {
         numfiletypes+=2;
         if (ifieldhalos) numfiletypes+=2;
     }
