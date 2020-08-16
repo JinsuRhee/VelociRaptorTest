@@ -1,6 +1,14 @@
-Pro rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
-	horg=horg, num_thread=num_thread, n_snap=n_snap, longint=longint
+PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
+	horg=horg, num_thread=num_thread, n_snap=n_snap, longint=longint, skip=skip
 
+	;;-----
+	;; Skip Process
+	;;-----
+	IF skip EQ 1L THEN BEGIN
+		output2	= {p_pos:-1, p_vel:-1, p_age:-1, p_met:-1, p_mass:-1, dom_list:-1, $
+			rate:-1, a_exp:-1}
+		RETURN
+	ENDIF
 	;;-----
 	;; Read Simulation Info
 	;;-----

@@ -3,8 +3,10 @@ function read_vraptor, $
 	dir_catalog=dir_catalog, dir_raw=dir_raw, dir_lib=dir_lib, dir_save=dir_save, $
 	column_list=column_list, flux_list=flux_list, $
 	silent=silent, verbose=verbose, $
-	rv_raw=rv_raw, rv_id=rv_id, rv_match=rv_match, $
+	rv_raw=rv_raw, rv_tree=rv_tree, rv_id=rv_id, rv_match=rv_match, $
 	rv_prop=rv_prop, rv_gprop=rv_gprop, rv_save=rv_save, $
+	skip_tree=skip_tree, skip_id=skip_id, skip_match=skip_match, $
+	skip_prop=skip_prop, skip_gprop=skip_gprop, skip_save=skip_save, $
 	SFR_T=SFR_t, SFR_R=SFR_r, MAG_R=MAG_r, $
 	alltype=alltype, longint=longint
 
@@ -65,6 +67,33 @@ function read_vraptor, $
 	if keyword_set(verbose) then print, ' '
 	if keyword_set(verbose) then toc, /verbose
 
+
+	;;-----
+	;; Read Progenitors
+	;;-----
+
+	if keyword_set(verbose) then tic
+	if keyword_set(verbose) then print, '        %%%%%                           '
+	if keyword_set(verbose) then print, '        %%%%% Reading Tree		     '
+	if keyword_set(verbose) then print, '        %%%%%                           '
+
+	if strlen(file_search(dir_snap + 'rv_tree.sav')) lt 5L or keyword_set(rv_tree) then begin
+		if keyword_set(verbose) then print, '        %%%%% (No previous works are found)'
+
+		rv_readtree, output, output2, $
+			dir_snap=dir_snap, skip=KEYWORD_SET(skip_tree), n_snap=n_snap, horg=horg, $
+			column_list=column_list
+
+		save, filename=dir_snap + 'rv_tree.sav', output2
+	endif else begin
+	        restore, dir_snap + 'rv_tree.sav'
+	endelse
+	output	= rv_makestr(output2, output=output)
+	if keyword_set(verbose) then print, '        %%%%% Done in                      '
+	if keyword_set(verbose) then print, ' '
+	if keyword_set(verbose) then print, ' '
+	if keyword_set(verbose) then toc, /verbose
+
 	;;-----
 	;; Apply the mass limit
 	;;-----
@@ -100,7 +129,7 @@ function read_vraptor, $
 	if strlen(file_search(dir_snap + 'rv_id.sav')) lt 5L or keyword_set(rv_id) then begin
 		if keyword_set(verbose) then print, '        %%%%% (No previous works are found)'
 
-		rv_readid, output2, dir_snap=dir_snap, horg=horg
+		rv_readid, output2, dir_snap=dir_snap, horg=horg, skip=KEYWORD_SET(skip_id)
 
 		save, filename=dir_snap + 'rv_id.sav', output2
 	endif else begin
@@ -127,8 +156,9 @@ function read_vraptor, $
 		if ~keyword_set(num_thread) then spawn, 'nproc --all', num_thread
 		if ~keyword_set(num_thread) then num_tread = long(num_thread)
 
-		rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, horg=horg, num_thread=num_thread, longint=longint, $
-			n_snap=n_snap
+		rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
+			horg=horg, num_thread=num_thread, longint=longint, $
+			n_snap=n_snap, skip=KEYWORD_SET(skip_match)
 
 		save, filename=dir_snap + 'rv_ptcl.sav', output2
 	endif else begin
@@ -154,11 +184,9 @@ function read_vraptor, $
 		if ~keyword_set(num_thread) then spawn, 'nproc --all', num_thread
 		if ~keyword_set(num_thread) then num_tread = long(num_thread)
 
-		rv_gprop, output, output2, $
-			dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
-			horg=horg, num_thread=num_thread, $
-			n_snap=n_snap, flux_list=flux_list, $
-			SFR_T=SFR_t, SFR_R=SFR_R, MAG_R=MAG_R
+		rv_gprop, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
+			horg=horg, num_thread=num_thread, n_snap=n_snap, flux_list=flux_list, $
+			SFR_T=SFR_t, SFR_R=SFR_R, MAG_R=MAG_R, skip=KEYWORD_SET(skip_gprop)
 
 		save, filename=dir_snap + 'rv_gprop.sav', output2
 	endif else begin
@@ -184,7 +212,7 @@ function read_vraptor, $
 		if ~keyword_set(num_thread) then spawn, 'nproc --all', num_thread
 		if ~keyword_set(num_thread) then num_tread = long(num_thread)
 
-		rv_save, output, dir_save=dir_save, horg=horg, num_thread=num_thread, n_snap=n_snap, column_list=column_list, flux_list=flux_list
+		rv_save, output, dir_save=dir_save, horg=horg, num_thread=num_thread, n_snap=n_snap, column_list=column_list, flux_list=flux_list, skip=KEYWORD_SET(skip_save)
 	endif
 	if keyword_set(verbose) then print, '        %%%%% Done in                      '
 	if keyword_set(verbose) then print, ' '

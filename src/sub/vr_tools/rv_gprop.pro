@@ -1,7 +1,15 @@
-Pro rv_gprop, output, output2, $
+PRO rv_gprop, output, output2, $
 	dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
 	horg=horg, num_thread=num_thread, n_snap=n_snap, flux_list=flux_list, $
-	SFR_T=SFR_T, SFR_R=SFR_R, MAG_R=MAG_R
+	SFR_T=SFR_T, SFR_R=SFR_R, MAG_R=MAG_R, skip=skip
+
+	;;-----
+	;; Skip Process
+	;;-----
+	IF skip EQ 1L THEN BEGIN
+		output2	= {ABMag:-1, SFR:-1, SFR_R:-1, SFR_T:-1, MAG_R:-1}
+		RETURN
+	ENDIF
 
 	;;-----
 	;; Settings
@@ -77,4 +85,5 @@ Pro rv_gprop, output, output2, $
 		'MAG_R', MAG_R)
 	print, '        %%%%% GProp - Magnitudes are calculated'
 
+	RETURN
 End

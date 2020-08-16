@@ -32,9 +32,12 @@ Pro p_VRrun, settings
 		for j=0L, n_elements(Settings.P_VRrun_step) - 1L do $
 			tmp = tmp + ', /' + strtrim(Settings.P_VRrun_step(j),2)
 
+		for j=0L, n_elements(Settings.P_VRrun_skip) - 1L do $
+			tmp = tmp + ', /' + strtrim(Settings.P_VRrun_skip(j),2)
+
 		tmp	= tmp + ')'
 		void	= execute(tmp)
-		print, '      ----- ', i, ' / ', N2
+		print, '      ----- ', i, ' / ', MAX([N1,N2])
 	endfor
 
 

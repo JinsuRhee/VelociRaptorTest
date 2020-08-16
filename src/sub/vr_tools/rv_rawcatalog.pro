@@ -1,4 +1,4 @@
-function rv_rawcatalog, dir_snap=dir_snap, horg=horg, column_list=column_list, silent=silent
+function rv_rawcatalog, dir_snap=dir_snap, horg=horg, column_list=column_list, silent=silent, skip=skip 
 
 	;;-----
 	;; Find # of columns first, tags, and types

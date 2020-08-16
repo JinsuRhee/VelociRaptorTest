@@ -1,4 +1,12 @@
-Pro rv_readid, output, dir_snap=dir_snap, horg=horg
+PRO rv_readid, output, dir_snap=dir_snap, horg=horg, skip=skip
+
+	;;-----
+	;; SKIP PROCESS
+	;;-----
+	IF skip EQ 1 THEN BEGIN
+		output = {p_id:-1, b_ind:-1, u_ind:-1}
+		RETURN
+	ENDIF
 
 	;;-----
 	;; I/O Settings
@@ -136,5 +144,7 @@ Pro rv_readid, output, dir_snap=dir_snap, horg=horg
 
 	output  = create_struct('p_id', [id_bdn, id_ubd])
 	output  = create_struct(output, 'b_ind', bdn_ind, 'u_ind', ubd_ind + n_elements(id_bdn))
+
+	RETURN
 
 End
