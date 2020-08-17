@@ -121,7 +121,8 @@
 !!!!!!!
 !234567
       real(kind=8) function flux_integration(Y, DX, N)
-      integer(kind=4) :: N
+      IMPLICIT NONE
+      integer(kind=4) :: N, i
       real(kind=4) :: Y(N), Y2(N-1), DX(N-1)
 
       flux_integration = 0.
@@ -135,6 +136,7 @@
 !!!!!!!
 !234567
       Subroutine BR_interpolation(bi_int, ind_z, N_met, frac)
+      IMPLICIT NONE
       real(kind=4) :: z0, z1, z2, t0, t1, t2, bi_int(6), frac(4)
       real(kind=4) :: t_frac(2), z_frac(2), dum
       integer(kind=4) :: ind_z, N_met
@@ -161,6 +163,7 @@
 !!!!!!!
 !234567
       integer(kind=4) function Ext_ind2(S_metal, metal, N_SSP)
+      IMPLICIT NONE
       integer(kind=4) N_SSP 
       real(kind=4) S_metal(N_SSP), metal
 
@@ -168,7 +171,7 @@
       if(S_metal(1) .gt. metal) then
         Ext_ind2 = 0
       elseif(S_metal(N_SSP) .lt. metal) then
-        Ext_ind2 = N_table
+        Ext_ind2 = N_SSP
       else
   40    Ext_ind2 = Ext_ind2 + 1
         if(S_metal(Ext_ind2) .lt. metal) goto 40
@@ -181,6 +184,7 @@
 !!!!!!!
 !234567
       Subroutine TR_interpolation(SSP_Tr, SSP_Lam, N_SSP, Tr_Lam, Tr_Tr, N_Tr)
+      IMPLICIT NONE
       integer(kind=4) :: N_Tr, N_SSP, i, j, k, ind
       real(kind=4) :: SSP_Tr(N_SSP), SSP_Lam(N_SSP)
       real(kind=4) :: TR_Lam(N_Tr), Tr_Tr(N_Tr)
@@ -215,6 +219,7 @@
 !!!!!!!
 !234567
       Subroutine Ext_ind(SSP_wave, TR_wave, N_wave, N_tr, ind_a, ind_z)
+      IMPLICIT NONE
       integer(kind=4) :: N_wave, N_tr, ind_a, ind_z
       real(kind=4) :: SSP_wave(N_wave), TR_wave(N_tr)
 

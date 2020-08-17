@@ -61,7 +61,7 @@ FUNCTION get_flux, mass, met, gyr, $
 		larr(10)= num_thread
 
 		void	= call_external(ftr_name, 'get_flux', $
-			float(gyr(cut)), float(met(cut)), mass, $
+			float(gyr(cut)), float(met(cut)), mass(cut), $
 			float(age), float(metal_val), float(lambda), $
 			ssp_table, band_lam, band_tr, $
 			flux_tmp, larr, darr)
