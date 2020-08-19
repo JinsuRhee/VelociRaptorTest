@@ -31,14 +31,11 @@ Pro rv_save, output, dir_save=dir_save, horg=horg, num_thread=num_thread, $
 	ngal	= n_elements(output.id)
 	for i=0L, ngal - 1L do begin
 		if output.mass_tot(i) lt 1e6 then continue
-		IF output.b_ind EQ -1 THEN BEGIN
-			ib = -1L & iu = -1L
-			ptcl_id	= -1L
-		ENDIF ELSE BEGIN
+		ib = -1L & iu = -1L & ptcl_id = -1L
+		IF N_ELEMENTS(output.b_ind) GE 2 THEN BEGIN
 			ib = output.b_ind(i,*) & iu = output.u_ind(i,*)
 			ptcl_id	= [output.p_id(ib(0):ib(1)), output.p_id(iu(0):iu(1))]
-		ENDELSE
-
+		ENDIF
 		;ptcl_pos= [output.p_pos(ib(0):ib(1),*), output.p_pos(iu(0):iu(1),*)]
 		;ptcl_vel= [output.p_vel(ib(0):ib(1),*), output.p_vel(iu(0):iu(1),*)]
 		;ptcl_age= [output.p_age(ib(0):ib(1)), output.p_age(iu(0):iu(1))]
@@ -111,7 +108,6 @@ Pro rv_save, output, dir_save=dir_save, horg=horg, num_thread=num_thread, $
 		simple_write_hdf5, output.MAG_R, 'MAG_R', 		fid
 		;;----- Close the HDF5 file
 		h5f_close, fid
-
 
 	endfor
 End

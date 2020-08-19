@@ -303,7 +303,7 @@
         fname = TRIM(dir_raw)//'output_'//TRIM(snap)//'/part_'//&
           TRIM(snap)//'.out'//TRIM(domnum)
 
-        open(unit=uout, file=fname, form='unformatted', status='old')
+        open(newunit=uout, file=fname, form='unformatted', status='old')
         read(uout)
         read(uout)
         read(uout) nbody

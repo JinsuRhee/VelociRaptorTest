@@ -70,6 +70,7 @@ PRO rv_readid, output, dir_snap=dir_snap, horg=horg, skip=skip
         endfor
 
 	i0 = 0L & j0 = 0L & k0 = 0L
+	l0 = 0L & m0 = 0L
 
         for i=0L, n_mpi-1L do begin
                 openr, 10, dum_fname_bdn(i)
@@ -105,43 +106,43 @@ PRO rv_readid, output, dir_snap=dir_snap, horg=horg, skip=skip
 
                         if n_bnd ge 1L then begin
                                 bdn_ind(i0 + j,0) = j0
+				id_bdn_dum	= lon64arr(n_bnd)
                                 for k=0L, n_bnd-1L do begin
                                         readf, 10, str
-                                        id_bdn(j0) = long64(str)
-                                        j0 ++
+					id_bdn_dum(k) = long64(str)
                                 endfor
+				js_makearr, id_bdn, id_bdn_dum, j0, unitsize=100000L, type='L64'
                                 bdn_ind(i0 + j,1) = j0 - 1L
                         endif else begin
                                 bdn_ind(i0 + j,0) = j0
                                 bdn_ind(i0 + j,1) = j0
-                                if j0 eq 0L then id_bdn = [-1, id_bdn(j0:-1)]
-                                if j0 ge 1L then id_bdn = [id_bdn(0L:j0-1),-1,id_bdn(j0:-1)]
-                                j0 ++
+
+				IF j0 EQ 0L THEN id_bdn(0) = -1L
+				IF j0 GE 1L THEN js_makearr, id_bdn, [-1], j0, unitsize=100000L, type='L64'
                         endelse
 
                         if n_ubd ge 1L then begin
                                 ubd_ind(i0 + j,0) = k0
+				id_ubd_dum	= lon64arr(n_ubd)
                                 for k=0L, n_ubd-1L do begin
                                         readf, 11, str
-                                        id_ubd(k0) = long64(str)
-                                        k0 ++
+					id_ubd_dum(k) = LONG64(str)
                                 endfor
+				js_makearr, id_ubd, id_ubd_dum, k0, unitsize=100000L, type='L64'
                                 ubd_ind(i0 + j,1) = k0 - 1L
                         endif else begin
                                 ubd_ind(i0 + j,0) = k0
                                 ubd_ind(i0 + j,1) = k0
-                                if k0 eq 0L then id_ubd = [-1, id_ubd(j0:-1)]
-                                if k0 ge 1L then id_ubd = [id_ubd(0L:k0-1L),-1,id_ubd(k0:-1)]
-                                k0 ++
+				IF k0 EQ 0L THEN id_ubd(0) = -1L
+				IF k0 GE 1L THEN js_makearr, id_ubd, [-1], k0, unitsize=100000L, type='L64'	;;;
                         endelse
                 endfor
   
                 close, 10 & close, 11
                 i0 = i0 + n_obj(i)
         endfor
-  
-        id_bdn = id_bdn(0L:-2L) & id_ubd = id_ubd(0L:-2L)
-
+ 
+        id_bdn = id_bdn(0L:j0-1L) & id_ubd = id_ubd(0L:k0-1L)	
 	output  = create_struct('p_id', [id_bdn, id_ubd])
 	output  = create_struct(output, 'b_ind', bdn_ind, 'u_ind', ubd_ind + n_elements(id_bdn))
 

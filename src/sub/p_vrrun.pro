@@ -32,6 +32,7 @@ Pro p_VRrun, settings
 		for j=0L, n_elements(Settings.P_VRrun_step) - 1L do $
 			tmp = tmp + ', /' + strtrim(Settings.P_VRrun_step(j),2)
 
+		IF(STRLEN(Settings.P_VRrun_skip) GE 4L) THEN $
 		for j=0L, n_elements(Settings.P_VRrun_skip) - 1L do $
 			tmp = tmp + ', /' + strtrim(Settings.P_VRrun_skip(j),2)
 

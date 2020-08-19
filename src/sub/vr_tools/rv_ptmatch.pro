@@ -97,6 +97,86 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 		dom_list)
 
 
+	;;;;----- For unmatched galaxies
+	PRINT, "		MATCHING DONE - NOW BEGINNING MATCHING CORRECTION"
+	n_nomatch	= N_ELEMENTS(WHERE(rate LT 0.8))
+	FOR i=0L, N_ELEMENTS(xc) - 1L DO BEGIN
+		IF rate(i) GT 0.8 THEN CONTINUE
+		;;dum	= rate(i)
+		dfact	= 50.0
+		n_itr	= 0L
+		again:
+		n_itr ++
+		bind	= output.b_ind(i,*)
+		uind	= output.u_ind(i,*)
+		n_bdn	= bind(1) - bind(0) + 1L
+		n_ubd	= uind(1) - uind(0) + 1L
+		pid	= [output.p_id(bind(0):bind(1)), output.p_id(uind(0):uind(1))] 
+		pinfo	= DBLARR(n_bdn+n_ubd,9) - 1.0d8
+
+		ftr_name	= dir_lib + 'sub_ftn/find_domain.so'
+		domain2		= lonarr(1L, n_mpi) - 1L
+			larr	= lonarr(20) & darr = dblarr(20)
+			larr(0) = n_elements(xc(i))
+			larr(1) = n_mpi
+			larr(2)	= num_thread
+
+		dfact	= dfact + 50.0
+		darr(0) = dfact	;; Radius factor
+		void	= call_external(ftr_name, 'find_domain', $
+			xc(i), yc(i), zc(i), rr(i), $
+			siminfo.hindex, siminfo.levmax, domain2, larr, darr)
+		dom_list(i,*)	= domain2
+
+		domain2	= (WHERE(domain2 GE 0L)) + 1L
+
+		ftr_name	= dir_lib + 'sub_ftn/get_ptcl.so'
+			larr	= lonarr(20) & darr = dblarr(20)
+			larr(0) = N_ELEMENTS(pid)
+			larr(1) = N_ELEMENTS(domain2)
+			larr(2)	= n_snap
+			larr(3) = num_thread
+			larr(10) = strlen(dir_raw)
+			IF KEYWORD_SET(longint) THEN larr(19) = 100L
+
+		void	= CALL_EXTERNAl(ftr_name, 'get_ptcl', $
+			larr, darr, dir_raw, pid, pinfo, domain2)
+
+		pos_pt(bind(0):bind(1),*)	= pinfo(0L:n_bdn-1L,0:2)
+		pos_pt(uind(0):uind(1),*)	= pinfo(n_bdn:n_bdn+n_ubd-1L,0:2)
+
+		vel_pt(bind(0):bind(1),*)	= pinfo(0L:n_bdn-1L,3:5)
+		vel_pt(uind(0):uind(1),*)	= pinfo(n_bdn:n_bdn+n_ubd-1L,3:5)
+
+		mp_pt(bind(0):bind(1))	= pinfo(0L:n_bdn-1L,6)
+		mp_pt(uind(0):uind(1))	= pinfo(n_bdn:n_bdn+n_ubd-1L,6)
+
+		age_pt(bind(0):bind(1))	= pinfo(0L:n_bdn-1L,7)
+		age_pt(uind(0):uind(1))	= pinfo(n_bdn:n_bdn+n_ubd-1L,7)
+
+		met_pt(bind(0):bind(1))	= pinfo(0L:n_bdn-1L,8)
+		met_pt(uind(0):uind(1))	= pinfo(n_bdn:n_bdn+n_ubd-1L,8)
+
+		rate(i)	= N_ELEMENTS(WHERE(pinfo(*,8) GT -1.0d7)) * 1.0d / (n_bdn + n_ubd)
+		IF rate(i) LT 0.8 THEN BEGIN
+			IF n_itr LT 10 THEN GOTO, again
+		ENDIF
+
+		;PRINT, "%%%%% ----- 123123 -----"
+		;PRINT, "%%%%% UNMATCHED GALAXY REPORT"
+		;PRINT, "%%%%% ", STRTRIM(dum,2), " TO ", rate(i)
+		;PRINT, "%%%%% log (M) = ", ALOG10(output.mass_tot(i))
+		;PRINT, "%%%%% ----- 123123 -----"
+	ENDFOR
+
+	PRINT, "%%%%% ----- 123123 -----"
+	PRINT, "%%%%% UNMATCHED (rate < 0.8) GALAXY REPORT"
+	PRINT, "%%%%%"
+	PRINT, "%%%%% Fixed for ", n_nomatch, "	GALAXIES"
+	PRINT, "%%%%% Failed for ", N_ELEMENTS(WHERE(rate LT 0.8)), " GALAXIES"
+	PRINT, "%%%%% ----- 123123 -----"
+
+
 	pos_pt = pos_pt * siminfo.unit_l / 3.086d21
         vel_pt = vel_pt * siminfo.kms
         mp_pt  = mp_pt * siminfo.unit_m / 1.98892e33
