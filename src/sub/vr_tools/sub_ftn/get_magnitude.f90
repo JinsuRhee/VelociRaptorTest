@@ -24,32 +24,36 @@
 
       call omp_set_num_threads(n_thread)
 
-      !$OMP PARALLEL DO default(shared) private(fl_dum, j) schedule(static)
+      !$OMP PARALLEL DO default(shared) private(fl_dum, dist_dum, j) schedule(static)
       Do i=1, n_gal
         fl_dum = 0.
         mag(i) = -1d8
 
-        DO j=bin(i,1), bin(i,2)
-          IF(darr(1) .LT. 0.) THEN
-            fl_dum = fl_dum + flux(j)
-          ELSE
-            dist_dum = (pos(j,1) - xx(i))**2 + &
-                    (pos(j,2) - yy(i))**2 + &
-                    (pos(j,3) - zz(i))**2
-            dist_dum = sqrt(dist_dum)
-            IF(dist_dum .lt. rr(i)*darr(1)) fl_dum = fl_dum + flux(j)
+        DO j=bin(i,1)+1, bin(i,2)+1
+          IF(flux(j) .GT. -1.0d7) THEN
+            IF(darr(1) .LT. 0.) THEN
+              fl_dum = fl_dum + flux(j)
+            ELSE
+              dist_dum = (pos(j,1) - xx(i))**2 + &
+                      (pos(j,2) - yy(i))**2 + &
+                      (pos(j,3) - zz(i))**2
+              dist_dum = sqrt(dist_dum)
+              IF(dist_dum .lt. rr(i)*darr(1)) fl_dum = fl_dum + flux(j)
+            ENDIF
           ENDIF
         ENDDO
 
-        DO j=uin(i,1), uin(i,2)
-          IF(darr(1) .LT. 0.) THEN
-            fl_dum = fl_dum + flux(j)
-          ELSE
-            dist_dum = (pos(j,1) - xx(i))**2 + &
-                    (pos(j,2) - yy(i))**2 + &
-                    (pos(j,3) - zz(i))**2
-            dist_dum = sqrt(dist_dum)
-            IF(dist_dum .lt. rr(i)*darr(1)) fl_dum = fl_dum + flux(j)
+        DO j=uin(i,1)+1, uin(i,2)+1
+          IF(flux(j) .GT. -1.0d7) THEN
+            IF(darr(1) .LT. 0.) THEN
+              fl_dum = fl_dum + flux(j)
+            ELSE
+              dist_dum = (pos(j,1) - xx(i))**2 + &
+                      (pos(j,2) - yy(i))**2 + &
+                      (pos(j,3) - zz(i))**2
+              dist_dum = sqrt(dist_dum)
+              IF(dist_dum .lt. rr(i)*darr(1)) fl_dum = fl_dum + flux(j)
+            ENDIF
           ENDIF
         ENDDO
 

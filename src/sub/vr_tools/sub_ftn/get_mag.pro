@@ -29,6 +29,7 @@ FUNCTION get_mag, xc, yc, zc, rr, bind, uind, pos, met, gyr, mass, $
 		darr(0)	= -1.0	;; APERTURE SIZE (Should be altered below)
 
 	FOR i=0L, n_flux - 1L DO BEGIN
+		TIC
 		dummy	= dblarr(n_part) - 1.0d8
 		dummy	= get_flux(mass, met, gyr, $
 			lib=lib, band=flux_list(i), num_thread=num_thread)
@@ -44,6 +45,7 @@ FUNCTION get_mag, xc, yc, zc, rr, bind, uind, pos, met, gyr, mass, $
 
 			mag2(*,i,j) = mag_dum
 		ENDFOR
+		TOC, /VERBOSE
 	ENDFOR
 
 	RETURN, mag2
