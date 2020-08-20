@@ -160,7 +160,7 @@ function read_vraptor, $
 			horg=horg, num_thread=num_thread, longint=longint, $
 			n_snap=n_snap, skip=KEYWORD_SET(skip_match)
 
-		save, filename=dir_snap + 'rv_ptcl.sav', output2
+		SAVE, filename=dir_snap + 'rv_ptcl.sav', output2
 	endif else begin
 	        restore, dir_snap + 'rv_ptcl.sav'
 	endelse

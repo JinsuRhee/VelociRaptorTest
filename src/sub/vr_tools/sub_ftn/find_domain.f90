@@ -10,15 +10,20 @@
       Real(kind=8) xc(larr(1)), yc(larr(1)), zc(larr(1)), rr(larr(1))
       Real(kind=8) hindex(larr(2),2), rfact
       Integer(kind=4) levmax
-      Integer(kind=4) dom_list(larr(1),2400)
+      Integer(kind=4) dom_list(larr(1),larr(2))
 
 !Local Variables
 
-      Integer(kind=4) i, j, k, l, m
+      Integer(kind=4) i, j, k, impi
       Integer(kind=4) n_ptcl, n_mpi, n_thread, n_dim, n_dom
-      Real(kind=8) bnd(8,2), dkey, bounding(8)
-      Integer(kind=4) cpu(8,2), cpu_list(larr(2)), ind_dom(8,3)
-      Integer(kind=4) bit_length, order_min, dum_int(4)
+      INTEGER(KIND=4) lmin, bit_length, maxdom, ncpu_read
+      INTEGER(KIND=4) imin, imax, jmin, jmax, kmin, kmax
+      REAL(KIND=8) dmax, deltax, dkey, bounding(8)
+      REAL(KIND=8) bounding_min(8), bounding_max(8), order_min
+      REAL(KIND=8) xmin, xmax, ymin, ymax, zmin, zmax
+      INTEGER(KIND=4) idom(8), jdom(8), kdom(8)
+      INTEGER(KIND=4) cpu_min(8), cpu_max(8), cpu_list(larr(2))
+      LOGICAL cpu_read(larr(2))
 
       n_ptcl    = larr(1)
       n_mpi     = larr(2)
@@ -30,33 +35,118 @@
 
       call omp_set_num_threads(n_thread)
 
-      !$OMP PARALLEL DO default(shared) private(bnd, cpu, dum_int, j, cpu_list, ind_dom, bounding, dkey, order_min) schedule(static)
-      do i=1, n_ptcl
-        Call find_dom(xc(i), yc(i), zc(i), rr(i), levmax, &
-                n_dim, bnd, dum_int(1), ind_dom, dum_int(4), &
-                rfact, dkey)
+      DO i=1, n_ptcl
+        xmin = MAX(xc(i) - rfact*rr(i), 0.0)
+        xmax = MIN(xc(i) + rfact*rr(i), 1.0)
+        ymin = MAX(yc(i) - rfact*rr(i), 0.0)
+        ymax = MIN(yc(i) + rfact*rr(i), 1.0)
+        zmin = MAX(zc(i) - rfact*rr(i), 0.0)
+        zmax = MIN(zc(i) + rfact*rr(i), 1.0)
+        dmax = MAX(xmax-xmin,ymax-ymin,zmax-zmin)
+        DO j=1, levmax
+          deltax=0.5d0**j
+          IF(deltax.LT.dmax)EXIT
+        ENDDO
 
-        Do j=1, dum_int(1)
-          if(dum_int(4)>0)then
-            Call find_hilbert(ind_dom(j,1),ind_dom(j,2),ind_dom(j,3), &
-                bounding(1),dum_int(4),1)
-            order_min=bounding(1)
-          else
-            order_min=0.0d0
-          endif
-           bnd(j,1)=(order_min)*dkey
-           bnd(j,2)=(order_min+1.0D0)*dkey
-        Enddo
+        lmin = j
+        bit_length = lmin-1
+        maxdom = 2**bit_length
+        imin=0; imax=0; jmin=0; jmax=0; kmin=0; kmax=0
+        IF(bit_length>0) THEN
+                imin = int(xmin*dble(maxdom))
+                imax = imin+1
+                jmin = int(ymin*dble(maxdom))
+                jmax = jmin+1
+                kmin = int(zmin*dble(maxdom))
+                kmax = kmin+1
+         ENDIF
 
-        dum_int(2) = 0
-        Call find_cpu(bnd, cpu, n_mpi, dum_int(1), hindex, cpu_list, dum_int(2))
+         dkey=(dble(2**(levmax+1)/dble(maxdom)))**n_dim
+         n_dom = 1
+         IF(bit_length>0) n_dom = 8
+         idom(1)=imin; idom(2)=imax
+         idom(3)=imin; idom(4)=imax
+         idom(5)=imin; idom(6)=imax
+         idom(7)=imin; idom(8)=imax
+         jdom(1)=jmin; jdom(2)=jmin
+         jdom(3)=jmax; jdom(4)=jmax
+         jdom(5)=jmin; jdom(6)=jmin
+         jdom(7)=jmax; jdom(8)=jmax
+         kdom(1)=kmin; kdom(2)=kmin
+         kdom(3)=kmin; kdom(4)=kmin
+         kdom(5)=kmax; kdom(6)=kmax
+         kdom(7)=kmax; kdom(8)=kmax
 
-        Do j=1, dum_int(2) - 1
+         DO k=1,n_dom
+            if(bit_length>0)then
+               call find_hilbert(idom(k),jdom(k),kdom(k),bounding(1),bit_length,1)
+               order_min=bounding(1)
+            else
+               order_min=0.0d0
+            endif
+            bounding_min(k)=(order_min)*dkey
+            bounding_max(k)=(order_min+1.0D0)*dkey
+          ENDDO
+
+          cpu_min=0; cpu_max=0
+
+          do impi=1,n_mpi
+             do k=1,n_dom
+                if (   hindex(impi,1).le.bounding_min(k).and.&
+                     & hindex(impi,2).gt.bounding_min(k))then
+                   cpu_min(k)=impi
+                endif
+                if (   hindex(impi,1).lt.bounding_max(k).and.&
+                     & hindex(impi,2).ge.bounding_max(k))then
+                   cpu_max(k)=impi
+                endif
+             end do
+          end do
+
+          cpu_read = .FALSE.
+          cpu_list = 0
+          ncpu_read = 0
+          do k=1,n_dom
+             do j=cpu_min(k),cpu_max(k)
+                if(.not. cpu_read(j))then
+                   ncpu_read=ncpu_read+1
+                   cpu_list(ncpu_read)=j
+                   cpu_read(j)=.TRUE.
+                endif
+             enddo
+          enddo
+
+          DO j=1, ncpu_read
             dom_list(i,cpu_list(j)) = 1
-        Enddo
+          ENDDO
+      ENDDO
+      !!$OMP PARALLEL DO default(shared) private(bnd, cpu, dum_int, j, cpu_list, ind_dom, bounding, dkey, order_min) schedule(static)
+      !do i=1, n_ptcl
+      !  Call find_dom(xc(i), yc(i), zc(i), rr(i), levmax, &
+      !          n_dim, bnd, dum_int(1), ind_dom, dum_int(4), &
+      !          rfact, dkey)
 
-      enddo
-      !$OMP END PARALLEL DO
+      !  Do j=1, dum_int(1)
+      !    if(dum_int(4)>0)then
+      !      Call find_hilbert(ind_dom(j,1),ind_dom(j,2),ind_dom(j,3), &
+      !          bounding(1),dum_int(4),1)
+      !      order_min=bounding(1)
+      !    else
+      !      order_min=0.0d0
+      !    endif
+      !     bnd(j,1)=(order_min)*dkey
+      !     bnd(j,2)=(order_min+1.0D0)*dkey
+      !  Enddo
+
+      !  dum_int(2) = 0
+      !  Call find_cpu(bnd, cpu, n_mpi, dum_int(1), hindex, cpu_list, dum_int(2))
+
+      !  Do j=1, dum_int(2) - 1
+      !      dom_list(i,cpu_list(j)) = 1
+      !  Enddo
+
+      !enddo
+      !!$OMP END PARALLEL DO
       
       Return
       End
@@ -86,6 +176,9 @@
 
           if(hindex(i,1) .lt. bnd(j,2) .and. &
                   hindex(i,2) .ge. bnd(j,2)) cpu(j,2) = i
+
+          cpu(j,1) = MAX(cpu(j,1), 1)
+          cpu(j,2) = MIN(cpu(j,2), n_mpi)
         Enddo
       Enddo
 
@@ -108,6 +201,7 @@
       !!!!!
       Subroutine find_dom(xc, yc, zc, rr, levmax, ndim, bnd, ndom, &
                 ind_dom, bit_length, rfact, dkey)
+      IMPLICIT NONE
       Real(kind=8) xc, yc, zc, rr, rfact
       Real(kind=4) box(3,2), dmax, dx
       Real(kind=8) dkey
@@ -116,15 +210,16 @@
       Integer idom(8), jdom(8), kdom(8), ind_dom(8,3)
       Integer i, j, k
 
-      box(1,1) = xc - rfact*rr
-      box(1,2) = xc + rfact*rr
-      box(2,1) = yc - rfact*rr
-      box(2,2) = yc + rfact*rr
-      box(3,1) = zc - rfact*rr
-      box(3,2) = zc + rfact*rr
+      box(1,1) = MAX(xc - rfact*rr, 0.0)
+      box(1,2) = MIN(xc + rfact*rr, 1.0)
+      box(2,1) = MAX(yc - rfact*rr, 0.0)
+      box(2,2) = MIN(yc + rfact*rr, 1.0)
+      box(3,1) = MAX(zc - rfact*rr, 0.0)
+      box(3,2) = MIN(zc + rfact*rr, 1.0)
 
       dmax = max(box(1,2) - box(1,1), box(2,2) - box(2,1), &
              box(3,2) - box(3,1))
+      dmax = MIN(dmax, 0.49)
 
       do j=1, levmax
         dx = 0.5d0**j
@@ -132,7 +227,8 @@
       enddo
 
       lmin = j; bit_length = lmin - 1
-      maxdom = int(2.d0**bit_length)
+      !maxdom = int(2.d0**bit_length)
+      maxdom = 2**bit_length
 
       ind(1,1)=0; ind(1,2)=0; ind(2,1)=0; ind(2,2)=0; ind(3,1)=0; ind(3,2)=0
 
@@ -178,20 +274,20 @@
       subroutine find_hilbert(x,y,z,order,bit_length,npoint)
       implicit none
       
-      integer                        ::bit_length,npoint
-      integer     ,dimension(1:npoint)::x,y,z
-      real(kind=8),dimension(1:npoint)::order
+      integer     ,INTENT(IN)                   ::bit_length,npoint
+      integer     ,INTENT(IN), dimension(1:npoint)::x,y,z
+      real(kind=8),INTENT(OUT),dimension(1:npoint)::order
       
       logical,dimension(0:3*bit_length-1)::i_bit_mask
       logical,dimension(0:1*bit_length-1)::x_bit_mask,y_bit_mask,z_bit_mask
       integer,dimension(0:7,0:1,0:11)::state_diagram
       integer::i,ip,cstate,nstate,b0,b1,b2,sdigit,hdigit
       
-      !if(bit_length>bit_size(bit_length))then
-      !   write(*,*)'Maximum bit length=',bit_size(bit_length)
-      !   write(*,*)'stop in find_hilbert'
-      !   stop
-      !endif
+      if(bit_length>bit_size(bit_length))then
+         write(*,*)'Maximum bit length=',bit_size(bit_length)
+         write(*,*)'stop in find_hilbert'
+         stop
+      endif
       
       state_diagram = RESHAPE( (/   1, 2, 3, 2, 4, 5, 3, 5,&
                                 &   0, 1, 3, 2, 7, 6, 4, 5,&

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/resource.h>
 
 typedef struct {
    unsigned short slen;         /* length of the string         */
@@ -17,13 +18,12 @@ void rv_match(int argc, void *argv[])
   long *dom_list;
   float *rate;
 
-  STRING *dir_raw; 
+  STRING *dir_raw;
   int *larr;
   double *darr;
 
   larr		= (int *) argv[0];
   darr		= (double *) argv[1];
-
   dir_raw	= (STRING *) argv[2];
   id		= (long long *) argv[3];
   ind_b		= (long *) argv[4];
@@ -36,6 +36,23 @@ void rv_match(int argc, void *argv[])
   rate		= (float *) argv[11];
   dom_list	= (long *) argv[12];
 
-  //printf("%s", dir_raw->s);
+  //const rlim_t kStackSize = 64L * 1024L * 1024L;   // min stack size = 64 Mb
+  //struct rlimit rl;
+  //int result;
+
+  //result = getrlimit(RLIMIT_STACK, &rl);
+  //if (result == 0)
+  //{
+  //    if (rl.rlim_cur < kStackSize)
+  //    {
+  //        rl.rlim_cur = kStackSize;
+  //        result = setrlimit(RLIMIT_STACK, &rl);
+  //        if (result != 0)
+  //        {
+  //            fprintf(stderr, "setrlimit returned result = %d\n", result);
+  //        }
+  //    }
+  //}
+
 
   rv_match_(larr, darr, dir_raw->s, id, ind_b, ind_u, xp, vp, zp, ap, mp, rate, dom_list);   /* Compute sum */}

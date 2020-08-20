@@ -1,6 +1,5 @@
 !234567
-      Subroutine rv_match (larr, darr,  &
-                dir_raw, &
+      Subroutine rv_match (larr, darr, dir_raw, &
                 ID, ind_b, ind_u, xp, vp, zp, ap, mp, &
                 rate, dom_list)
 
@@ -18,7 +17,8 @@
 
       REAL(kind=4) rate(larr(2))
 
-      Character*(larr(11)) dir_raw
+      !Character*(larr(11)) dir_raw
+      Character(LEN=larr(11)) dir_raw
 
 !!!!!! Local Variables
       Integer(kind=4) i, j, k, ng
@@ -34,6 +34,7 @@
       !Real(kind=8), dimension(:), allocatable :: ap_g, zp_g, mp_g
 
       Integer(kind=4) dumi(4), ind1, ind2, n0, n1
+      INTEGER(KIND=4) dom_list2(larr(2),larr(5)), matchok
       Real(kind=8) dmp_mass, ptype
 
       n_ptcl    = larr(1)
@@ -46,12 +47,15 @@
       dmp_mass  = darr(1)
       ptype     = darr(2) ! 1 for star ptcls // -1 for DM ptcls
 
+      dom_list2 = -1
+
       call OMP_SET_NUM_THREADS(n_thread)
-      !$OMP PARALLEL DO default(shared) private(gn,gals,dumi,p_d,p_d2,p_i,p_i2,ng,k) schedule(dynamic)
+      !$OMP PARALLEL DO default(shared) private(gn,gals,dumi,p_d,p_d2,p_i,p_i2,ng,k,matchok) schedule(dynamic)
       Do i=1, n_mpi
         if(mod(i,10) .eq. 0 .and. i .lt. n_mpi / n_thread) &
            print *, i, ' // ', n_mpi / n_thread
-        CALL GAL_LIST(dom_list, n_gal, n_mpi, i, gals, gn)
+        k=i
+        CALL GAL_LIST(dom_list, n_gal, n_mpi, k, gals, gn)
 
         IF(gn .ge. 0) THEN
 
@@ -59,10 +63,12 @@
           dumi(4) = OMP_GET_THREAD_NUM()
           CALL RD_PART_NBODY(dir_raw, n_snap, dumi, larr)
 
+          IF(dumi(1) .LT. 1) PRINT *, 'WWWWWWWWWWWWWWWWWWWWWWWWWWWW'
           ALLOCATE(p_d2(1:dumi(1),1:9))
           ALLOCATE(p_i2(1:dumi(1),1:3))
 
-          CALL RD_PART(dir_raw, n_snap, i, dumi(1), larr, &
+          k=i
+          CALL RD_PART(dir_raw, n_snap, k, dumi(1), larr, &
                   p_d2, p_i2)
 
           !DO k=1, 1000
@@ -132,9 +138,8 @@
                 dumi(3) = dumi(3) + 1
               ENDDO
 
-              CALL match(p_i, p_d, &
-                      p_i2, p_d2, &
-                      dumi(2), dumi(1), larr, darr)
+              CALL match(p_i, p_d, p_i2, p_d2, &
+                      dumi(2), dumi(1), matchok, larr, darr)
 
               dumi(3) = 1
               DO k=ind_b(dumi(4),1)+1, ind_b(dumi(4),2)+1
@@ -173,6 +178,9 @@
                 dumi(3) = dumi(3) + 1
               ENDDO
 
+              !!
+              IF(matchok .GE. 0) dom_list2(dumi(4),i) = 1
+              !!
               DEALLOCATE(p_i2, p_d2)
             ENDDO
 
@@ -207,7 +215,14 @@
       ENDDO
       !$OMP END PARALLEL DO
 
-      !!!!!--
+      !$OMP PARALLEL DO default(shared) schedule(static)
+      DO i=1, n_gal
+        DO j=1, n_mpi
+          dom_list(i,j) = dom_list2(i,j)
+        ENDDO
+      ENDDO
+      !$OMP END PARALLEL DO
+
       RETURN
       End
 
@@ -294,10 +309,10 @@
 
       Subroutine match(raw_int, raw_dbl, &
               gal_id, gal_dbl, &
-              n_raw, n_gal, larr, darr)
+              n_raw, n_gal, matchok, larr, darr)
 
       implicit none
-      integer(kind=4) n_raw, n_gal
+      integer(kind=4) n_raw, n_gal, matchok
 
       real(kind=8) raw_dbl(n_raw,9)
       integer(kind=8) raw_int(n_raw,3), raw_id(n_raw)
@@ -312,13 +327,15 @@
       integer(kind=4) i, j, k, l, di
       integer(kind=4) ind0, ind1, mi
       integer(kind=4) n_thread
-      integer(kind=4) n_rep
+      integer(kind=4) n_rep, n_test1, n_test2
       integer(kind=8), dimension(:), allocatable :: ind, id_rep
       !integer(kind=4) ind(larr(5))
       !integer(kind=8) id_rep(larr(5))
       logical gal_ch
 
-
+      n_test1 = matchok
+      n_test2 = 0
+      matchok = -1
       !!!!
       DO i=1, n_raw
         raw_id(i) = raw_int(i,3)
@@ -351,11 +368,14 @@
             DO j=1,9
               gal_dbl(i,j) = raw_dbl(mi,j)
             ENDDO
+            matchok = 1
+            n_test2 = n_test2 + 1
           ENDIF
 
         ENDIF
       ENDDO
 
+      !IF(n_test2 .GT. 0) PRINT *, n_test1, ' / ', n_test2
       RETURN
 
       !!!!
@@ -444,7 +464,7 @@
           ENDDO
           nn = nn + 1
         ENDIF
-        IF(ptype .lt. 0 .and. abs(p_dbl(i,7) - dmp_mass)/dmp_mass .lt. 1e-5) THEN
+        IF(ptype .lt. 0 .and. abs(p_dbl2(i,7) - dmp_mass)/dmp_mass .lt. 1e-5) THEN
           DO j=1, 9
             p_dbl(nn,j) = p_dbl2(i,j)
           ENDDO
@@ -488,7 +508,7 @@
       Implicit none
       Integer(kind=4) larr(20)
       Integer(kind=4) icpu, nbody, n_snap
-      Character*(larr(11)) dir_raw
+      Character(LEN=larr(11)) dir_raw
 
       Real(kind=8) p_dbl(nbody,9), dumdbl
       Integer(kind=8) p_int(nbody,3)
@@ -513,7 +533,8 @@
       fname = TRIM(dir_raw)//'output_'//TRIM(snap)//'/part_'//&
         TRIM(snap)//'.out'//TRIM(domnum)
 
-      open(newunit=uout, file=fname, form='unformatted', status='old')
+      open(newunit=uout, file=TRIM(fname), &
+        form='unformatted', status='old')
       read(uout); read(uout); read(uout); read(uout)
       read(uout); read(uout); read(uout); read(uout)
 
@@ -584,7 +605,7 @@
       Implicit none
       Integer(kind=4) larr(20)
       Integer(kind=4) n_snap, dumi(4)
-      Character*(larr(11)) dir_raw
+      Character(LEN=larr(11)) dir_raw
 
 !!!!! Local variables
       Character*(100) fname, snap, domnum
@@ -598,7 +619,7 @@
       fname = TRIM(dir_raw)//'output_'//TRIM(snap)//'/part_'//&
         TRIM(snap)//'.out'//TRIM(domnum)
 
-      open(unit=uout, file=fname, form='unformatted', status='old')
+      open(unit=uout, file=TRIM(fname), form='unformatted', status='old')
       read(uout)
       read(uout)
       read(uout) nbody
