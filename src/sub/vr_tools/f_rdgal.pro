@@ -1,9 +1,10 @@
-FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange
+FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange, id=id
 
 	dir	= Settings.dir_save + $
 		'VR_Galaxy/snap_' + string(n_snap,format='(I3.3)') + '/'
 
 	flist	= file_search(dir + 'GAL_*')
+	IF KEYWORD_SET(id) THEN flist = file_search(dir + 'GAL_' + STRING(id,format='(I6.6)') + '.hdf5')
 	n_gal	= n_elements(flist)
 
 	;;-----
@@ -22,7 +23,7 @@ FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange
 				H5D_close, did
 				H5F_close, fid
 			endfor
-			save, filename=dir + 'mlist.sav', mdum
+			IF ~KEYWORD_SET(id) THEN save, filename=dir + 'mlist.sav', mdum
 		endelse
 	endif else begin
 		mrange	= fltarr(2)
@@ -77,16 +78,32 @@ FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange
 			H5D_close, did
 		Endfor
 
-		did	= H5D_open(fid, '/Domain_List')
+		IF i EQ 0L THEN progs = LONARR(n_gal,10)
+		did	= H5D_OPEN(fid, '/G_Prop/Progs')
+		progs(i,*)	= H5D_READ(did)
+		H5D_close, did
+
+		did	= H5D_OPEN(fid, '/Domain_List')
 		if i eq 0L then dlist = H5D_READ(did)
 		if i eq 0L then n_mpi=n_elements(dlist)
 		if i eq 0L then d_list=lonarr(n_gal,n_mpi)
 		d_list(i,*) = H5D_READ(did)
 		H5D_close, did
 
-		did	= H5D_open(fid, '/Flux_List')
-		f_list	= H5D_READ(did)
+		IF i EQ 0L THEN rate = fltarr(n_gal)
+		did	= H5D_OPEN(fid, '/rate')
+		rate(i)	= H5D_READ(did)
 		H5D_close, did
+
+		IF i EQ 0L THEN BEGIN
+			did	= H5D_open(fid, '/Flux_List')
+			f_list	= H5D_READ(did)
+			H5D_close, did
+
+			did	= H5D_open(fid, '/Aexp')
+			aexp	= H5D_READ(did)
+			H5D_close, did
+		ENDIF
 
 		H5F_close, fid
 		indG ++
@@ -104,7 +121,8 @@ FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange
 		void	= execute(tmp)
 	Endfor
 
-	GP	= create_struct(GP,'Domain_List', d_list, 'Flux_List', f_list, $
+	GP	= create_struct(GP, 'rate', rate, 'progs', progs, $
+		'Aexp', mean(aexp), 'Domain_List', d_list, 'Flux_List', f_list, $
 		'SFR_R', settings.P_VRrun_SFR_R, 'SFR_T', settings.P_VRrun_SFR_t, $
 		'MAG_R', settings.P_VRrun_MAG_R)
 
