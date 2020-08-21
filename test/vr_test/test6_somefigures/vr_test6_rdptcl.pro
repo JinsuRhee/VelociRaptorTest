@@ -8,7 +8,7 @@ IF ~KEYWORD_SET(save) THEN BEGIN
 
 	cut	= where(part.family EQ 2L)
 	xp	= part.xp(cut,*)
-
+	mp	= part.mp(cut)
 	file	= '/storage5/FORNAX/KISTI_OUTPUT/l10006/output_00' + $
 		string(n_snap,format='(I3.3)') + '/info_00' + $
 		string(n_snap,format='(I3.3)') + '.txt'
@@ -16,11 +16,11 @@ IF ~KEYWORD_SET(save) THEN BEGIN
 	rd_info, info, file=file
 
 	xp	= xp * info.unit_l / 3.086d21
-
-	save, filename = settings.root_path + 'test/vr_test/test6*/ptcl.sav', xp
+	mp	= mp / MIN(mp)
+	save, filename = settings.root_path + 'test/vr_test/test6*/ptcl.sav', xp, mp
 ENDIF ELSE BEGIN
 	restore,  settings.root_path + 'test/vr_test/test6*/ptcl.sav'
 ENDELSE
 
-	RETURN, xp
+	RETURN, {xp:xp, mp:mp}
 END

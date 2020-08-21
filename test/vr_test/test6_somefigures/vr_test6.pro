@@ -1,23 +1,45 @@
 PRO vr_test6, settings
 
-	n_snap = 030L
-
-	;;-----
-	;; Read Particles
-	;;-----
-	ptcl = vr_test6_rdptcl(settings, n_snap, /save)
-
+	n_snap = 100L
 
 	;;-----
 	;; 2D Map
 	;;-----
-	xr	= [14000., 18000.]
-	yr	= [14000., 18000.]
+	xr	= [19000., 33000.]
+	yr	= [19000., 33000.]
 	bandwidth= [3., 3.]
 	n_pix	= 2000L
 	ctable	= 0L
-	vr_test6_ptclmap1, ptcl, settings, n_snap, dsize=[800., 800.], $
-		xr=xr, yr=yr, bandwidth=bandwidth, n_pix=n_pix, ctable=ctable
+
+	;; Original Map
+	vr_test6_ptclmap1, settings, n_snap, dsize=[800., 800.], $
+		xr=xr, yr=yr, bandwidth=bandwidth, n_pix=n_pix, ctable=ctable, /save;, /eps;, /skip
+
+	;; Massive Galaxie
+	n_pix	= 2000L
+	rfact	= 3.0
+	;bw	= [2.0d, 2.0d] * 1.0d-3
+	drange	= [2.0, 6.5]
+	proj	= 'edgeon'
+	weight	= 'mass'
+	vr_test6_mgal, settings, n_snap, rfact=rfact, n_pix=n_pix, kernel=1L, drange=drange, proj=proj, weight=weight, /eps, /skip
+
+	;;-----
+	;; CMD
+	;;-----
+
+	vr_test6_figure, settings, n_snap, /f_cmd, /eps, /skip
+
+	STOP
+
+	;; OMP region
+	xr	= [-30., 30.] + 14179.7
+	yr	= [-30., 30.] + 14377.6
+	bandwidth= [0.05, 0.05]
+	n_pix	= 2000L
+	ctable	= 0L
+	vr_test6_ptclmap2, ptcl, settings, n_snap, dsize=[800., 800.], $
+		xr=xr, yr=yr, bandwidth=bandwidth, n_pix=n_pix, ctable=ctable, /eps, /skip
 
 	STOP
 

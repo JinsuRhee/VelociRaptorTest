@@ -645,9 +645,9 @@ FIND_PACKAGE_MESSAGE_DETAILS_MPI_C:INTERNAL=[/home/jinsu/intel/compilers_and_lib
 //Details about finding MPI_CXX
 FIND_PACKAGE_MESSAGE_DETAILS_MPI_CXX:INTERNAL=[/home/jinsu/intel/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib/libmpicxx.so][/home/jinsu/intel/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib/libmpifort.so][/home/jinsu/intel/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib/release_mt/libmpi.so][/home/jinsu/intel/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib/libmpigi.a][/usr/lib/x86_64-linux-gnu/libdl.so][/usr/lib/x86_64-linux-gnu/librt.so][/usr/lib/x86_64-linux-gnu/libpthread.so][mpicxx;mpifort;mpi;mpigi;dl;rt;pthread][/home/jinsu/intel/compilers_and_libraries_2018.5.274/linux/mpi/intel64/include][TRUE][v3.1()]
 //Details about finding OpenMP
-FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][cfound components:  CXX ][v4.5()]
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][cfound components:  CXX ][v()]
 //Details about finding OpenMP_CXX
-FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-fopenmp][/usr/lib/gcc/x86_64-linux-gnu/7/libgomp.so][/usr/lib/x86_64-linux-gnu/libpthread.so][v4.5()]
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-fopenmp][/usr/lib/gcc/x86_64-linux-gnu/7/libgomp.so][/usr/lib/x86_64-linux-gnu/libpthread.so][v()]
 //Details about finding PkgConfig
 FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v0.29.1()]
 //ADVANCED property for variable: GSL_CBLAS_LIBRARY
