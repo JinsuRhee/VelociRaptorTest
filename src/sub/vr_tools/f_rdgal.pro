@@ -1,4 +1,4 @@
-FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange, id=id
+FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange, id=id, bound=bound
 
 	dir	= Settings.dir_save + $
 		'VR_Galaxy/snap_' + string(n_snap,format='(I3.3)') + '/'

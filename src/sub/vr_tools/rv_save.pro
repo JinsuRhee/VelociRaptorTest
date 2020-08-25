@@ -110,5 +110,6 @@ Pro rv_save, output, dir_save=dir_save, horg=horg, num_thread=num_thread, $
 		h5f_close, fid
 
 	endfor
+	spawn, 'chmod 777 ' + STRTRIM(fname) + '/GAL_*.hdf5'
 End
 
