@@ -68,14 +68,16 @@
           ALLOCATE(p_i2(1:dumi(1),1:3))
 
           k=i
-          CALL RD_PART(dir_raw, n_snap, k, dumi(1), larr, &
+          IF(larr(19) .LE. 10) CALL RD_PART(dir_raw, n_snap, k, dumi(1), larr, &
                   p_d2, p_i2)
+          IF(larr(19) .GT. 10) CALL RD_PART_YZiCS(dir_raw, n_snap, &
+                  k, dumi(1), larr, p_d2, p_i2)
 
-          !DO k=1, 1000
-          !  PRINT *, p_d2(k,7)
-          !ENDDO
 
-          CALL GET_PTCL_NUM(p_d2(1:dumi(1),7), p_i2(1:dumi(1),2), &
+          IF(larr(19) .LE. 10) CALL GET_PTCL_NUM(p_d2(1:dumi(1),7), p_i2(1:dumi(1),7), &
+                  dumi(1), dumi(2), ptype, dmp_mass)
+          IF(larr(19) .GT. 10) CALL GET_PTCL_NUM_YZiCS(&
+                  p_d2(1:dumi(1),7), p_d2(1:dumi(1),8), &
                   dumi(1), dumi(2), ptype, dmp_mass)
 
           IF(dumi(2) .gt. 0) THEN
@@ -83,7 +85,9 @@
             ALLOCATE(p_d(1:dumi(2),1:9))
             ALLOCATE(p_i(1:dumi(2),1:3))
 
-            CALL GET_PTCL(p_d, p_i, p_d2, p_i2, &
+            IF(larr(19) .LE. 10) CALL GET_PTCL(p_d, p_i, p_d2, p_i2, &
+                  dumi(1), dumi(2), ptype, dmp_mass)
+            IF(larr(19) .GT. 10) CALL GET_PTCL_YZiCS(p_d, p_i, p_d2, p_i2, &
                   dumi(1), dumi(2), ptype, dmp_mass)
 
             DEALLOCATE(p_d2)
@@ -481,6 +485,48 @@
 
 
 !!!!!
+!! GET TARGETTED PARTICLE_YZiCS
+!!!!!
+      SUBROUTINE GET_PTCL_YZiCS(p_dbl, p_int, p_dbl2, p_int2, &
+                      nbody, nptcl, ptype, dmp_mass)
+
+      Implicit none
+      Integer(kind=4) nbody, nptcl
+      Real(kind=8) ptype, dmp_mass
+
+      Real(kind=8) p_dbl(nptcl,9), p_dbl2(nbody,9)
+      Integer(kind=8) p_int(nptcl,3), p_int2(nbody,3)
+
+      Integer(kind=4) i, j, nn
+
+      nn = 1
+      Do i=1, nbody
+        IF(ptype .gt. 0 .and. p_dbl2(i,8) .LT. 0) THEN
+          DO j=1, 9
+            p_dbl(nn,j) = p_dbl2(i,j)
+          ENDDO
+
+          DO j=1,3
+            p_int(nn,j) = p_int2(i,j)
+          ENDDO
+          nn = nn + 1
+        ENDIF
+        IF(ptype .lt. 0 .and. abs(p_dbl2(i,7) - dmp_mass)/dmp_mass .lt. 1e-5) THEN
+          DO j=1, 9
+            p_dbl(nn,j) = p_dbl2(i,j)
+          ENDDO
+
+          DO j=1,3
+            p_int(nn,j) = p_int2(i,j)
+          ENDDO
+          nn = nn + 1
+        ENDIF
+      ENDDO
+
+      RETURN
+      END
+
+!!!!!
 !! GET TARGETTED PARTICLE NUMBER
 !!!!!
       SUBROUTINE GET_PTCL_NUM(p_m, p_fam, nbody, nptcl, ptype, dmp_mass)
@@ -500,6 +546,28 @@
       RETURN
       END
 
+!!!!!
+!! GET TARGETTED PARTICLE NUMBER_YZiCS
+!!!!!
+      SUBROUTINE GET_PTCL_NUM_YZiCS(p_m, p_age, nbody, nptcl, ptype, dmp_mass)
+
+      Implicit none
+      Integer(kind=4) nptcl, nbody, i
+      Real(kind=8) p_m(nbody), p_age(nbody), ptype, dmp_mass
+
+      nptcl = 0
+      Do i=1, nbody
+        IF(ptype .LT. 0 .AND. abs(p_m(i) - dmp_mass)/dmp_mass .lt. 1e-5) &
+                nptcl = nptcl + 1
+
+        IF(ptype .GT. 0 .AND. p_age(i) .LT. 0) &
+                nptcl = nptcl + 1
+      ENDDO
+
+      RETURN
+      END
+
+!!!!!
 !! READ PARTICLE
 !!!!!
       SUBROUTINE RD_PART(dir_raw, n_snap, icpu, nbody, larr, &
@@ -583,6 +651,105 @@
         p_int(i,1) = dum_int_byte(i)
         IF(p_int(i,1) .gt. 100) p_int(i,1) = p_int(i,1) - 255
       ENDDO
+
+      read(uout) dum_dbl                !! Age
+      Do i=1, nbody
+        p_dbl(i,8) = dum_dbl(i)
+      ENDDO
+
+      read(uout) dum_dbl                !! Metallicity
+      Do i=1, nbody
+        p_dbl(i,9) = dum_dbl(i)
+      ENDDO
+
+      close(uout)
+      RETURN
+      END
+
+!!!!!
+!! READ PARTICLE_YZICS
+!!!!!
+      SUBROUTINE RD_PART_YZiCS(dir_raw, n_snap, icpu, nbody, larr, &
+        p_dbl, p_int)
+
+      Implicit none
+      Integer(kind=4) larr(20)
+      Integer(kind=4) icpu, nbody, n_snap
+      Character(LEN=larr(11)) dir_raw
+
+      Real(kind=8) p_dbl(nbody,9), dumdbl
+      Integer(kind=8) p_int(nbody,3)
+
+      !! POS(3), VEL(3), MASS, AGE, METAL
+      !! TAG, FAMILY, ID
+!!!!! Local variables
+      Integer(kind=4) i, j, k, uout
+      Integer(kind=4) longint
+
+      Real(kind=8) dum_dbl(nbody)
+      Integer(kind=8) dum_int_ll(nbody)
+      Integer(kind=4) dum_int(nbody)
+      Integer(kind=1) dum_int_byte(nbody)
+
+      Character*(100) fname, snap, domnum
+
+      longint   = larr(20)
+
+      write(snap, '(I5.5)') n_snap
+      write(domnum, '(I5.5)') icpu
+      fname = TRIM(dir_raw)//'output_'//TRIM(snap)//'/part_'//&
+        TRIM(snap)//'.out'//TRIM(domnum)
+
+      open(newunit=uout, file=TRIM(fname), &
+        form='unformatted', status='old')
+      read(uout); read(uout); read(uout); read(uout)
+      read(uout); read(uout); read(uout); read(uout)
+
+      Do j=1, 3                         !! Position
+        read(uout) dum_dbl
+        Do i=1, nbody
+          p_dbl(i,j) = dum_dbl(i)
+        ENDDO
+      ENDDO
+
+      Do j=1, 3                         !! Velocity
+        read(uout) dum_dbl
+        Do i=1, nbody
+          p_dbl(i,j+3) = dum_dbl(i)
+        ENDDO
+      ENDDO
+
+      read(uout) dum_dbl                !! Mass
+      Do i=1, nbody
+        p_dbl(i,7) = dum_dbl(i)
+      ENDDO
+
+
+      IF(longint .le. 10) THEN          !! ID
+        read(uout) dum_int_ll
+        Do i=1, nbody
+          p_int(i,3) = dum_int_ll(i)
+        ENDDO
+      ELSE
+        read(uout) dum_int
+        Do i=1, nbody
+          p_int(i,3) = dum_int(i)
+        ENDDO
+      ENDIF
+
+      read(uout) dum_int                !! LEVEL
+
+      !read(uout) dum_int_byte
+      !Do i=1, nbody
+      !  p_int(i,2) = dum_int_byte(i)
+      !  IF(p_int(i,2) .gt. 100) p_int(i,2) = p_int(i,2) - 255
+      !ENDDO
+
+      !read(uout) dum_int_byte
+      !Do i=1, nbody
+      !  p_int(i,1) = dum_int_byte(i)
+      !  IF(p_int(i,1) .gt. 100) p_int(i,1) = p_int(i,1) - 255
+      !ENDDO
 
       read(uout) dum_dbl                !! Age
       Do i=1, nbody
