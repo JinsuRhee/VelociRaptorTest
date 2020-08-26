@@ -69,14 +69,17 @@ FUNCTION f_rdamr, settings, gid, n_snap=n_snap, yzics=yzics, rfact=rfact, $
 	z	= z(0L:n4-1L)
 	var	= var(0L:n5-1L,*)
 
+	mass	= var(*,0) * dx^3 * siminfo.unit_m / 1.98892d+33
+	nH	= var(*,0) * siminfo.unit_nH
+	temp	= var(*,4) / var(*,0) * siminfo.unit_t2
+	metal	= var(*,7)
+
 	dx	= dx * siminfo.unit_l / 3.086d21
 	x	= x * siminfo.unit_l / 3.086d21
 	y	= y * siminfo.unit_l / 3.086d21
 	z	= z * siminfo.unit_l / 3.086d21
 
-	rho	= var(*,0) * siminfo.unit_d / 1.6600000d-24
-	temp	= var(*,4) / var(*,0) * siminfo.unit_t2
-	cell	= {dx:dx, x:x, y:y, z:z, density:rho, temperature:temp, metal:var(*,7)}
+	cell	= {dx:dx, x:x, y:y, z:z, density:nH, temperature:temp, metal:var(*,7), mass:mass}
 
 	RETURN, cell
 END
