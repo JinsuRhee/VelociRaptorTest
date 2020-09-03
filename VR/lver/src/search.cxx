@@ -84,6 +84,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
     param[1]=(opt.ellxscale*opt.ellxscale)*(opt.ellphys*opt.ellphys)*(opt.ellhalophysfac*opt.ellhalophysfac);
     param[6]=param[1];
     cout<<"First build tree ... "<<endl;
+
 #ifdef USEOPENMP
     //if using openmp produce tree with large buckets as a decomposition of the local mpi domain
     //to then run local fof searches on each domain before stitching
@@ -92,6 +93,8 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
         Double_t rdist = sqrt(param[1]);
         //determine the omp regions;
         tree = new KDTree(Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
+	cout<<"%123123 - Building Root Tree done"<<endl;
+	cout<<"%123123		# of OMP Regions -> "<<tree->GetNumLeafNodes()<<endl;
         tree->OverWriteInputOrder();
         numompregions=tree->GetNumLeafNodes();
         ompdomain = OpenMPBuildDomains(opt, numompregions, tree, rdist);
@@ -99,6 +102,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
         for (i=0;i<nbodies;i++) storeorgIndex[i]=Part[i].GetID();
         //build local trees
         tree3dfofomp = OpenMPBuildLocalTrees(opt, numompregions, Part, ompdomain, period);
+	cout<<"%123123 - Building OMP Tree done"<<endl;
         if (opt.iverbose) cout<<ThisTask<<": finished building "<<numompregions<<" domains and trees "<<MyGetTime()-time3<<endl;
     }
     else {
@@ -169,6 +173,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
             delete[] ompimport;
             }
         }
+
         //free memory
 #ifndef USEMPI
         delete[] Head;
@@ -202,12 +207,11 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
 #if !defined(USEMPI) && defined(STRUCDEN)
         if (numgroups>0 && (opt.iSubSearch==1&&opt.foftype!=FOF6DCORE))
 #endif
-        tree = new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
+        //tree = new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
         //if running MPI then need to pudate the head, next info
 #ifdef USEMPI
         OpenMPHeadNextUpdate(nbodies, Part, numgroups, pfof, Head, Next);
 #endif
-
     }
     else {
         //posible alteration for all particle search
@@ -237,6 +241,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
     totalgroups=numgroups;
     //if this flag is set, calculate localfield value here for particles possibly resident in a field structure
 #ifdef STRUCDEN
+    cout<<"%123123 HERE???"<<endl;
     if (numgroups>0 && (opt.iSubSearch==1&&opt.foftype!=FOF6DCORE)) {
         numingroup=BuildNumInGroup(nbodies, numgroups, pfof);
         storetype=new Int_t[nbodies];
@@ -639,7 +644,7 @@ private(i,tid,xscaling,vscaling,js_time)
             for (Int_t j=0;j<numingroup[i];j++) {
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
             }
-	    if(MyGetTime() - js_time > 10.) cout<<"%123123 - "<<i<<" // "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<MyGetTime() - js_time<<" // "<<endl;
+	    if(MyGetTime() - js_time > 10.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<MyGetTime() - js_time<<"    -     "<<Part[noffset[i]].GetPosition(0)<<" // "<<Part[noffset[i]].GetPosition(1)<<" // "<<Part[noffset[i]].GetPosition(2)<<endl;
         }
 #ifdef USEOPENMP
 }
