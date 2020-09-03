@@ -19,8 +19,70 @@ typedef std::pair<double, int> js_temp;
 
 bool comparator (const js_temp& l, const js_temp& r){return l.first < r.first;}
 
+
 namespace NBody
 {
+
+    inline int KDTree::js_qorg(int js_start, int js_end, int js_dim, Double_t js_pivot, int js_pivotind)
+    {
+    	int js_i = js_start;
+    	int js_j = js_end;
+
+	int js_ind = -1;
+	Double_t js_xx = js_pivot;
+    	while(1)
+    	{
+    		while(bucket[js_i].GetPhase(js_dim) < js_xx){
+    			js_i ++;
+    		}
+    
+    		while(bucket[js_j].GetPhase(js_dim) > js_xx){
+    			js_j --;
+    		}
+
+    		if(js_i >= js_j) break;
+	        if(js_ind < 0){
+			if(js_i == js_pivotind) js_ind = js_j;
+			if(js_j == js_pivotind) js_ind = js_i;
+		}	
+    		swap(bucket[js_i],bucket[js_j]);
+    		js_i ++;
+    		js_j --;
+    	}
+	return js_ind;
+    }
+
+
+    inline void KDTree::js_qsort(int js_start, int js_end, int js_dim)
+    {
+    	int js_ind = (js_start + js_end)/2;
+    	int js_i = js_start;
+    	int js_j = js_end;
+
+    	Double_t js_xx = bucket[js_ind].GetPhase(js_dim);
+    	while(1)
+    	{
+    		while(bucket[js_i].GetPhase(js_dim) < js_xx){
+    			js_i ++;
+    		}
+    
+    		while(bucket[js_j].GetPhase(js_dim) > js_xx){
+    			js_j --;
+    		}
+    
+    		if(js_i >= js_j) break;
+    		swap(bucket[js_i],bucket[js_j]);
+    		js_i ++;
+    		js_j --;
+    	}
+    	if(js_start < js_i - 1) js_qsort(js_start, js_i-1, js_dim);
+    	if(js_j +1 < js_end) js_qsort(js_j + 1, js_end, js_dim);
+    }
+
+
+
+
+
 
     // -- Inline functions that get called often when building the tree.
 
@@ -520,12 +582,49 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
         Int_t size = end - start;
         Int_tree_t id = 0;
 
+	Double_t js_time0;
+	js_time0 = (clock() /( (double)CLOCKS_PER_SEC));
         //if not building in parallel can set ids here and update number of nodes
         //otherwise, must set after construction
         if (ibuildinparallel == false) {
             id = numnodes;
             numnodes++;
         }
+
+	// -- JS -- //
+	// Additionally defining Leaf Node when the node is too small
+	Double_t js_dx4 = -1.0;
+        for (int j=0;j<ND;j++) (this->*bmfunc)(j, start, end, bnd[j], otp);
+
+	for(int js_nn2=0; js_nn2<ND; js_nn2 ++){
+	        if(abs(bnd[js_nn2][1] - bnd[js_nn2][0]) > js_dx4){
+	    	    js_dx4 = abs(bnd[js_nn2][1] - bnd[js_nn2][0]);
+	        }
+	}
+
+	if(js_dx4 < 1.0){
+        	    if (ibuildinparallel == false) numleafnodes++;
+	        Double_t js_dd, js_dd2;
+	        Double_t js_pos[3], js_vel[3];
+	        for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (bnd[js_ii][1] + bnd[js_ii][0])/2.;
+	        if (ND==6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (bnd[js_ii+3][1] + bnd[js_ii+3][0])/2.;
+
+	        int js_leafind = start;
+	        js_dd = -1.;
+	        for(int js_ii=start; js_ii<end; js_ii++){
+	    	    js_dd2 = DistanceSqd(bucket[js_ii].GetPosition(), js_pos);
+	    	    if(ND == 6) js_dd2 += DistanceSqd(bucket[js_ii].GetVelocity(), js_vel);
+	    	    if(js_dd2 > js_dd) {
+	    		    js_dd = js_dd2;
+	    		    js_leafind = js_ii;
+	    	    }
+	        }
+	        swap(bucket[start], bucket[js_leafind]);
+
+	        return new LeafNode(id ,start, end, bnd, ND);
+	}
+	/////
+	
         if (size <= b)
         {
             if (ibuildinparallel == false) numleafnodes++;
@@ -593,47 +692,268 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 	    // only when the tree is spartially structured
 	    if(treetype==TPHYS || treetype==TPHS){
 
-		    vector<js_temp> js_array; // [Position, index] Vector
-		    Particle *js_bucket;
+		    //////////
+		    ///// New ver.
+		    //////////
 
-		    int js_nn = 0;
+		    
+		    // Get Range
+		    Double_t js_min=bucket[start].GetPhase(splitdim);
+		    Double_t js_max=bucket[start].GetPhase(splitdim);
 
-		    js_bucket = new Particle[end-start];
-
-		    //Sorting particle
-		    for(int js_ind=start; js_ind<end; js_ind++){
-			    if(treetype == TPHYS) js_array.push_back(js_temp(bucket[js_ind].GetPosition(splitdim), js_nn));
-			    if(treetype == TPHS) js_array.push_back(js_temp(bucket[js_ind].GetPhase(splitdim), js_nn));
-			    js_nn++;
+		    for(int js_i=start; js_i<end; js_i++){
+		            if(bucket[js_i].GetPhase(splitdim) >= js_max) js_max = bucket[js_i].GetPhase(splitdim);
+		            if(bucket[js_i].GetPhase(splitdim) <= js_min) js_min = bucket[js_i].GetPhase(splitdim);
 		    }
 
-		    stable_sort(js_array.begin(), js_array.end(), comparator);
+		    js_max = js_max + 0.1;
 
-		    for(int js_nn=0; js_nn<end-start; js_nn++) js_bucket[js_nn] = bucket[js_nn + start];
-		    for(int js_nn=0; js_nn<end-start; js_nn++) bucket[js_nn + start] = js_bucket[js_array[js_nn].second];
+		    // Build Histogram
+		    int js_histn = 10000;
+		    if(end - start<10000) js_histn = 1000;
+		    if(end - start<1000) js_histn = 100;
+		    if(end - start<100) js_histn = 10;
+		    Double_t js_hist[js_histn];
+		    Double_t js_dx = (js_max - js_min)/js_histn;
+		    for(int js_i=0; js_i<js_histn; js_i++) js_hist[js_i] = 0;
 
-		    delete[] js_bucket;
-		    js_array.clear();
-		    vector<js_temp>().swap(js_array);
-
-		    //Find the particle with the maximum inter-particle distance
-
-		    double js_dx = 0;
-		    double js_dx2;
-		    js_nn = (end - start) / 16;
-		    if(js_nn ==0) js_nn ++;             // To Avoid very small leaf node
-
-		    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
-			    if(treetype == TPHYS) js_dx2 = bucket[js_ind+1].GetPosition(splitdim) - bucket[js_ind-1].GetPosition(splitdim);
-			    if(treetype == TPHS) js_dx2 = bucket[js_ind+1].GetPhase(splitdim) - bucket[js_ind-1].GetPhase(splitdim);
-			    js_dx2 = abs(js_dx2);
-			    if(js_dx2 > js_dx){
-				    js_dx = js_dx2;
-				    k = js_ind;
-				    if(treetype == TPHYS) splitvalue = bucket[k].GetPosition(splitdim);
-				    if(treetype == TPHS) splitvalue = bucket[k].GetPhase(splitdim);
-			    }
+		    int js_i2 = 0;
+		    for(int js_i=start; js_i<end; js_i++){
+		            js_i2 = (bucket[js_i].GetPhase(splitdim) - js_min)/js_dx;
+		            js_hist[js_i2] ++;
 		    }
+
+		    // Find the bin at which the density is minimum
+		    int js_histind;
+		    Double_t js_dx2 = 10000000000.;
+
+		    Double_t js_dx0 = 0.;
+		    for(int js_i=0; js_i < js_histn; js_i ++){
+		        js_dx0 = js_dx0 + js_hist[js_i];
+
+		        if(js_hist[js_i] < (end-start)*0.6){
+		    		if(js_dx0 > (end-start)*0.2 && js_dx0 < (end - start)*0.8){
+		    		        if(js_hist[js_i] < js_dx2 && js_hist[js_i] > 0.){
+		    		    	    js_histind = js_i;
+		    		    	    js_dx2 = js_hist[js_i];
+		    		        }
+		    		}
+		        }
+		        else
+		        {
+		        	js_histind = js_i;
+		        	break;
+		        }
+		    }
+
+		    // Determine SplitValue
+		    int js_dsind;
+		    int js_dsnn = js_hist[js_histind];
+		    Double_t js_dumarr[js_dsnn];
+		    int js_dumind=0;
+		    for(int js_i=start; js_i<end; js_i++){
+		            js_dsind = (bucket[js_i].GetPhase(splitdim) - js_min) / js_dx;
+		            if(js_dsind == js_histind){
+		        	    js_dumarr[js_dumind++] = bucket[js_i].GetPhase(splitdim);
+		            }
+		    }
+		    sort(js_dumarr, js_dumarr + js_dsnn);
+		    if(js_dsnn == 0){
+			    cout<<"%123123 - Failed to build tree - 731"<<endl;
+			    exit(9);
+		    }
+		    if(js_dsnn == 1){
+			    js_dx2 = js_dumarr[0];
+			    splitvalue = js_dx2;
+		    }
+		    if(js_dsnn == 2){
+			    js_dx2 = js_dumarr[0];
+			    splitvalue = js_dumarr[0];//(js_dumarr[0] + js_dumarr[1])/2.;
+		    }
+		    if(js_dsnn >= 3){
+			    js_dsnn = js_dsnn/2;
+			    js_dx2 = js_dumarr[js_dsnn];
+			    splitvalue = js_dx2;//(js_dumarr[js_dsnn] + js_dumarr[js_dsnn+1]) / 2.;
+		    }
+
+		    // Find the pivot value from the particle array
+		    Double_t js_dx3 = 1000000000.;
+		    for(int js_i=start; js_i<end; js_i++){
+		            if(abs(bucket[js_i].GetPhase(splitdim) - js_dx2) < js_dx3){
+		        	    js_dx3 = abs(bucket[js_i].GetPhase(splitdim) - js_dx2);
+		        	    js_i2 = js_i;
+		            }
+		    }
+
+		    // Ordeing by the pivot value
+		    int js_i3;
+		    int js_start = start;
+		    int js_end = end-1;
+		    Double_t pivot_value = bucket[js_i2].GetPhase(splitdim);
+		    js_i3 = js_qorg(js_start, js_end, splitdim, pivot_value, js_i2);
+		    if(js_i3 < 0) js_i3 = js_i2;
+
+		    // Setting Pivot
+		    int js_i4;
+		    for(int js_i=start; js_i<end; js_i++){
+		            if(bucket[js_i].GetPhase(splitdim) > pivot_value){
+		        	    js_i4 = js_i;
+		        	    break;
+		            }
+		    }
+
+		    if(js_i3 < js_i4) js_i4 = js_i4 - 1;
+		    swap(bucket[js_i3], bucket[js_i4]);
+
+		    k = js_i4;
+
+			    //if(k - start < 0 || end - k < 0 || k - start < 2 || end - k < 2){
+			    //        cout<<"%123123123	NG - "<<splitvalue<<" / "<<js_min<<" ~ "<<js_max<<endl;
+			    //        cout<<"%123123123	NG - "<<js_i3<<" / "<<js_i4<<" / "<<bucket[js_i4].GetPhase(splitdim)<<endl;
+			    //        cout<<"%123123123	NG SE - "<<start<<" / "<<end<<endl;
+			    //        cout<<"%123123123   NG NH - "<<js_histn<<" / "<<js_histind<<endl;
+
+			    //        js_dx0 = 0.;
+			    //    	    for(int js_i=0; js_i<js_histn; js_i++){
+			    //    	    js_dx0 = js_dx0 + js_hist[js_i];
+			    //    	    cout<<"		"<<js_i<<" / "<<js_hist[js_i]<<" / "<<js_dx0<<" / "<<(end - start)*0.3<<" / "<<(end-start)*0.7<<endl;
+			    //        }
+			    //        exit(9);
+			    //}
+			    //if(end - start > 10000000){
+			    //        Double_t js_time1 = (clock() /( (double)CLOCKS_PER_SEC));
+			    //        cout<<"%123123 - "<<b<<" / "<<end - start<<" -> "<<k - start<<" / "<<end - k<<" / "<<js_time1 - js_time0<<endl;
+			    //}
+
+			   
+
+		    //////////
+		    ///// Org Ver.
+		    //////////
+
+		    //// Quick Sort by ascending order
+		    //int js_nn = end - start + 1;
+		    //js_qsort(js_nn, start, end-1, splitdim);
+
+		    //// Build Histogram
+		    //int js_histn = 10000;
+		    //Double_t js_hist[js_histn];
+		    //Double_t js_dx = (bucket[end-1].GetPhase(splitdim) - bucket[start].GetPhase(splitdim))/js_histn;
+		    //for(int js_i=0; js_i<js_histn; js_i++) js_hist[js_i] = 0;
+
+		    //int js_i2 = 0;
+		    //for(int js_i=start; js_i<end; js_i++){
+		    //        js_i2 = (bucket[js_i].GetPhase(splitdim) - bucket[start].GetPhase(splitdim))/js_dx;
+		    //        js_hist[js_i2] ++;
+		    //}
+
+		    //// Find the bin at which the density is smallest
+		    //Double_t js_dx2 = 10000000000.;
+		    //for(int js_i=js_histn*0.3; js_i<js_histn*0.7; js_i++){
+		    //        if(js_hist[js_i] < js_dx2){
+		    //    	    js_i2 = js_i;
+		    //    	    js_dx2 = js_hist[js_i];
+		    //        }
+		    //}
+
+		    //// Find the indices of particles within the bin
+		    //int js_i0, js_i1;
+		    //js_i0 = -1;
+		    //js_i1 = -1;
+		    //for(int js_i=start; js_i<end; js_i++){
+		    //        if(js_i0 < 0){
+		    //            if(bucket[js_i].GetPhase(splitdim) > js_i2 * js_dx + bucket[start].GetPhase(splitdim)){
+		    //    	      js_i0 = js_i;
+		    //            }
+		    //        }
+
+		    //        if(js_i1 < 0){
+		    //    	if(bucket[js_i].GetPhase(splitdim) > (js_i2 + 1.0)*js_dx + bucket[start].GetPhase(splitdim)){
+		    //    		js_i1 = js_i;
+		    //    	}
+		    //        }
+		    //}
+		    //if(js_i0 == js_i1) js_i0 = js_i1 - 1;
+
+		    //// Determine the split index and value
+		    //js_dx2 = 0;
+		    //for(int js_i=js_i0; js_i<js_i1; js_i ++){
+		    //        if(bucket[js_i + 1].GetPhase(splitdim) - bucket[js_i - 1].GetPhase(splitdim) > js_dx2){
+		    //    	    js_dx2 = bucket[js_i + 1].GetPhase(splitdim) - bucket[js_i - 1].GetPhase(splitdim);
+		    //    	    k = js_i;
+		    //    	    splitvalue = bucket[js_i].GetPhase(splitdim);
+		    //        }
+		    //}
+
+		    //////////
+		    ///// Old ver.
+		    //////////
+		    //
+		    //        //vector<js_temp> js_array; // [Position, index] Vector
+		    //        //Particle *js_bucket;
+
+		    //        //int js_nn = 0;
+
+		    //        //js_bucket = new Particle[end-start];
+
+		    //        //Sorting particle
+		    //        //for(int js_ind=start; js_ind<end; js_ind++){
+		    //        //        if(treetype == TPHYS) js_array.push_back(js_temp(bucket[js_ind].GetPosition(splitdim), js_nn));
+		    //        //        if(treetype == TPHS) js_array.push_back(js_temp(bucket[js_ind].GetPhase(splitdim), js_nn));
+		    //        //        js_nn++;
+		    //        //}
+
+		    //        //stable_sort(js_array.begin(), js_array.end(), comparator);
+		    //js_qsort(start, end-1, splitdim);
+
+		    //        //for(int js_nn=0; js_nn<end-start; js_nn++) js_bucket[js_nn] = bucket[js_nn + start];
+		    //        //for(int js_nn=0; js_nn<end-start; js_nn++) bucket[js_nn + start] = js_bucket[js_array[js_nn].second];
+
+		    //        //delete[] js_bucket;
+		    //        //js_array.clear();
+		    //        //vector<js_temp>().swap(js_array);
+
+		    //        //Find the particle with the maximum inter-particle distance
+
+		    //double js_dx = 0;
+		    //double js_dx2;
+		    //int js_nn = (end - start) / 4;
+		    //        //if(js_nn ==0) js_nn ++;             // To Avoid very small leaf node
+
+		    //int js_dn = (end-start) / 100;
+		    //if(js_dn == 0) js_dn = 1;
+
+		    //        //for(int js_ind=start + js_nn; js_ind<end-js_nn-js_dn; js_ind=js_ind + js_dn){
+		    //        //        js_dx2	= bucket[js_ind+js_dn].GetPhase(splitdim) - bucket[js_ind].GetPhase(splitdim);
+		    //        //        if(abs(js_dx2) > js_dx){
+		    //        //    	    js_dx = abs(js_dx2);
+		    //        //    	    k = js_ind;
+		    //        //        }
+		    //        //}
+
+		    //        //js_dx = 0;
+		    //        //int k0 = k;
+		    //        //for(int js_ind=k0; js_ind<k0 + js_dn; js_ind++){
+		    //        //        js_dx2 = bucket[js_ind+1].GetPhase(splitdim) - bucket[js_ind-1].GetPhase(splitdim);
+		    //        //        if(abs(js_dx2) > js_dx){
+		    //        //    	    js_dx = abs(js_dx2);
+		    //        //    	    splitvalue	= bucket[js_ind].GetPhase(splitdim);
+		    //        //    	    k = js_ind;
+		    //        //        }
+		    //        //}
+
+
+		    //for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
+		    //        if(treetype == TPHYS) js_dx2 = bucket[js_ind+1].GetPosition(splitdim) - bucket[js_ind-1].GetPosition(splitdim);
+		    //        if(treetype == TPHS) js_dx2 = bucket[js_ind+1].GetPhase(splitdim) - bucket[js_ind-1].GetPhase(splitdim);
+		    //        js_dx2 = abs(js_dx2);
+		    //        if(js_dx2 > js_dx){
+		    //    	    js_dx = js_dx2;
+		    //    	    k = js_ind;
+		    //    	    if(treetype == TPHYS) splitvalue = bucket[k].GetPosition(splitdim);
+		    //    	    if(treetype == TPHS) splitvalue = bucket[k].GetPhase(splitdim);
+		    //        }
+		    //}
 	    }
 	    else{
 		    splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
@@ -860,9 +1180,6 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
         if (nthreads == 1) ibuildinparallel = false;
         if (inested == false) omp_set_nested(int(ibuildinparallel));
 #endif
-	//%123123123
-	//cout<<"%123123 KDTREE: NTHREAD - "<<nthreads<<" / "<<endl;
-	//%123123123
         numparts = nparts;
         numleafnodes=numnodes=0;
         bucket = p;
