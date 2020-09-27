@@ -749,10 +749,12 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 		    // Determine SplitValue
 		    int js_dsind;
 		    int js_dsnn = js_hist[js_histind];
-		    Double_t js_dumarr[js_dsnn];
+		    Double_t *js_dumarr;
+		    js_dumarr = new Double_t[js_dsnn];
 		    int js_dumind=0;
 		    for(int js_i=start; js_i<end; js_i++){
 		            js_dsind = (bucket[js_i].GetPhase(splitdim) - js_min) / js_dx;
+			    if(end - start == 6842080)cout<<"		"<<js_dsind<<" / "<<bucket[js_i].GetPhase(splitdim)<<" / "<<js_min<<" / "<<js_max<<endl;
 		            if(js_dsind == js_histind){
 		        	    js_dumarr[js_dumind++] = bucket[js_i].GetPhase(splitdim);
 		            }
@@ -775,6 +777,8 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 			    js_dx2 = js_dumarr[js_dsnn];
 			    splitvalue = js_dx2;//(js_dumarr[js_dsnn] + js_dumarr[js_dsnn+1]) / 2.;
 		    }
+
+		    delete js_dumarr;
 
 		    // Find the pivot value from the particle array
 		    Double_t js_dx3 = 1000000000.;
