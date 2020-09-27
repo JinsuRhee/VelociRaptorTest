@@ -17,25 +17,27 @@
 
       REAL(kind=4) rate(larr(2))
 
-      !Character*(larr(11)) dir_raw
       Character(LEN=larr(11)) dir_raw
 
 !!!!!! Local Variables
-      Integer(kind=4) i, j, k, ng
+      Integer(kind=4) i, j, k, l, gind
       Integer(kind=4) n_ptcl, n_gal, n_thread, n_split, n_mpi
       Integer(kind=4) n_snap
-      Integer(kind=4) gals(larr(2)), gn, nb, np
+      Integer(kind=4) numptcl, numptcl2, numgal, numtmp
+      Integer(kind=4) g_list(larr(2)), nb, np
 
       Real(kind=8), dimension(:,:), allocatable :: p_d, p_d2
       Integer(kind=8), dimension(:,:), allocatable :: p_i, p_i2
-
+      INTEGER(KIND=4), DIMENSION(:), ALLOCATABLE :: p_skip
       !Integer(kind=8), dimension(:), allocatable :: id_g
       !Real(kind=8), dimension(:,:), allocatable :: xp_g, vp_g
       !Real(kind=8), dimension(:), allocatable :: ap_g, zp_g, mp_g
 
-      Integer(kind=4) dumi(4), ind1, ind2, n0, n1
+      Integer(kind=4) dumint, ind1, ind2, n0, n1
       INTEGER(KIND=4) dom_list2(larr(2),larr(5)), matchok
+      INTEGER(KIND=4) threadnum, g_num, js_order
       Real(kind=8) dmp_mass, ptype
+
 
       n_ptcl    = larr(1)
       n_gal     = larr(2)
@@ -48,153 +50,214 @@
       ptype     = darr(2) ! 1 for star ptcls // -1 for DM ptcls
 
       dom_list2 = -1
-
+      js_order = 0
       call OMP_SET_NUM_THREADS(n_thread)
-      !$OMP PARALLEL DO default(shared) private(gn,gals,dumi,p_d,p_d2,p_i,p_i2,ng,k,matchok) schedule(dynamic)
+      !$OMP PARALLEL DO default(shared) &
+      !$OMP & private(p_skip,p_d,p_d2,p_i,p_i2,gind,k,matchok) &
+      !$OMP & private(threadnum,numgal,numptcl,numptcl2,numtmp) &
+      !$OMP & private(g_num,dumint,js_order,g_list,l) &
+      !$OMP & schedule(dynamic,5)
       Do i=1, n_mpi
-        if(mod(i,10) .eq. 0 .and. i .lt. n_mpi / n_thread) &
-           print *, i, ' // ', n_mpi / n_thread
+        threadnum = OMP_GET_THREAD_NUM()
+        IF(threadnum .EQ. 1) THEN
+                js_order = js_order+1
+                PRINT *, js_order, ' // ', n_mpi / n_thread
+        ENDIF
+
+        !!-----
+        !! Get # of Galaxies in this MPI domain
+        !!-----
         k=i
-        CALL GAL_LIST(dom_list, n_gal, n_mpi, k, gals, gn)
+        CALL GAL_LIST(dom_list, n_gal, n_mpi, k, g_list, numgal)
+        IF(numgal .LT. 0) CYCLE !! Skip if there is no galaxy
 
-        IF(gn .ge. 0) THEN
+        !!-----
+        !! Get # of Ptcls in this domain
+        !!-----
+        k=i
+        CALL RD_PART_NBODY(dir_raw, n_snap, k, threadnum, numptcl, larr)
 
-          dumi(3) = i
-          dumi(4) = OMP_GET_THREAD_NUM()
-          CALL RD_PART_NBODY(dir_raw, n_snap, dumi, larr)
+        !!-----
+        !! Allocate Raw Ptcl arrays
+        !!-----
+        ALLOCATE(p_d2(1:numptcl,1:9))
+        ALLOCATE(p_i2(1:numptcl,1:3))
 
-          IF(dumi(1) .LT. 1) PRINT *, 'WWWWWWWWWWWWWWWWWWWWWWWWWWWW'
-          ALLOCATE(p_d2(1:dumi(1),1:9))
-          ALLOCATE(p_i2(1:dumi(1),1:3))
+        !!-----
+        !! Read Particles
+        !!-----
+        k=i
+        IF(larr(19) .LE. 10) CALL RD_PART(dir_raw, n_snap, k, numptcl, &
+                threadnum, larr, p_d2, p_i2)
+        IF(larr(19) .GT. 10) CALL RD_PART_YZiCS(dir_raw, n_snap, &
+                k, numptcl, threadnum, larr, p_d2, p_i2)
 
-          k=i
-          IF(larr(19) .LE. 10) CALL RD_PART(dir_raw, n_snap, k, dumi(1), larr, &
-                  p_d2, p_i2)
-          IF(larr(19) .GT. 10) CALL RD_PART_YZiCS(dir_raw, n_snap, &
-                  k, dumi(1), larr, p_d2, p_i2)
 
+        !!-----
+        !! Get # of DM or Star Ptcls
+        !!-----
+        IF(larr(19) .LE. 10) CALL GET_PTCL_NUM(&
+                p_d2(1:numptcl,7:7), p_i2(1:numptcl,7:7), &
+                numptcl, numptcl2, ptype, dmp_mass)
+        IF(larr(19) .GT. 10) CALL GET_PTCL_NUM_YZiCS(&
+                p_d2(1:numptcl,7:7), p_d2(1:numptcl,8:8), &
+                numptcl, numptcl2, ptype, dmp_mass)
+        IF(numptcl2 .LT. 0) THEN
+                DEALLOCATE(p_d2, p_i2)
+                CYCLE !! If there is no target ptcls
+        ENDIF
 
-          IF(larr(19) .LE. 10) CALL GET_PTCL_NUM(p_d2(1:dumi(1),7), p_i2(1:dumi(1),7), &
-                  dumi(1), dumi(2), ptype, dmp_mass)
-          IF(larr(19) .GT. 10) CALL GET_PTCL_NUM_YZiCS(&
-                  p_d2(1:dumi(1),7), p_d2(1:dumi(1),8), &
-                  dumi(1), dumi(2), ptype, dmp_mass)
+        !!-----
+        !! Allocate Matching Ptcl Arrays
+        !!-----
+        ALLOCATE(p_d(1:numptcl2,1:9))
+        ALLOCATE(p_i(1:numptcl2,1:3))
 
-          IF(dumi(2) .gt. 0) THEN
+        !!-----
+        !! Extract target (DM / Star) ptcls
+        !!-----
+        IF(larr(19) .LE. 10) CALL GET_PTCL(p_d, p_i, p_d2, p_i2, &
+              numptcl, numptcl2, ptype, dmp_mass)
+        IF(larr(19) .GT. 10) CALL GET_PTCL_YZiCS(p_d, p_i, p_d2, p_i2, &
+              numptcl, numptcl2, ptype, dmp_mass)
 
-            ALLOCATE(p_d(1:dumi(2),1:9))
-            ALLOCATE(p_i(1:dumi(2),1:3))
+        DEALLOCATE(p_d2)
+        DEALLOCATE(p_i2)
 
-            IF(larr(19) .LE. 10) CALL GET_PTCL(p_d, p_i, p_d2, p_i2, &
-                  dumi(1), dumi(2), ptype, dmp_mass)
-            IF(larr(19) .GT. 10) CALL GET_PTCL_YZiCS(p_d, p_i, p_d2, p_i2, &
-                  dumi(1), dumi(2), ptype, dmp_mass)
+        !!-----
+        !! Sort target ptcls by their ID
+        !!-----
+        CALL SORT_PTCL(p_d, p_i, numptcl2)
 
-            DEALLOCATE(p_d2)
-            DEALLOCATE(p_i2)
+        !!-----
+        !! Match for individual galaxy
+        !!-----
+        DO gind=1, numgal
+          g_num = g_list(gind)
 
-            CALL SORT_PTCL(p_d, p_i, dumi(2))
+          !!-----
+          !! # of ptcls in this galaxy
+          !!-----
+          numtmp = ind_b(g_num,2) - ind_b(g_num,1) + 1
+          numtmp = numtmp + ind_u(g_num,2) - ind_u(g_num,1) + 1
 
-            DO ng=1, gn
-              dumi(4) = gals(ng)
+          !!-----
+          !! Allocate ptcl memory for this galaxy
+          !!-----
+          ALLOCATE(p_d2(1:numtmp,1:9))
+          ALLOCATE(p_i2(1:numtmp,1:1))
+          ALLOCATE(p_skip(1:numtmp))
 
-              ! dumi(1), p_d2, p_i2 are replaced here by galaxy array
-              dumi(1) = ind_b(dumi(4),2) - ind_b(dumi(4),1) + 1
-              dumi(1) = dumi(1) + ind_u(dumi(4),2) - ind_u(dumi(4),1) + 1
+          !!-----
+          !! Bring original value from the galaxy
+          !!-----
+          dumint = 0
+          DO k=ind_b(g_num,1)+1, ind_b(g_num,2)+1
+            dumint = dumint + 1
+            !p_skip(dumint) = -1
+            !IF(xp(k,1) .GT. -1.0D7) p_skip(dumint) = 1
 
-              ALLOCATE(p_d2(1:dumi(1),1:9))
-              ALLOCATE(p_i2(1:dumi(1),1:1))
+            p_i2(dumint,1) = id(k)
 
-              dumi(3) = 1
-              DO k=ind_b(dumi(4),1)+1, ind_b(dumi(4),2)+1
-                p_i2(dumi(3),1) = id(k)
+            DO l=1, 9
+              p_d2(dumint,l) = -1.0D8
+            ENDDO
+            !p_d2(dumint,1) = xp(k,1)
+            !p_d2(dumint,2) = xp(k,2)
+            !p_d2(dumint,3) = xp(k,3)
+            !  
+            !p_d2(dumint,4) = vp(k,1)
+            !p_d2(dumint,5) = vp(k,2)
+            !p_d2(dumint,6) = vp(k,3)
 
-                p_d2(dumi(3),1) = xp(k,1)
-                p_d2(dumi(3),2) = xp(k,2)
-                p_d2(dumi(3),3) = xp(k,3)
-                  
-                p_d2(dumi(3),4) = vp(k,1)
-                p_d2(dumi(3),5) = vp(k,2)
-                p_d2(dumi(3),6) = vp(k,3)
+            !p_d2(dumint,7) = mp(k)
+            !p_d2(dumint,8) = ap(k)
+            !p_d2(dumint,9) = zp(k)
 
-                p_d2(dumi(3),7) = mp(k)
-                p_d2(dumi(3),8) = ap(k)
-                p_d2(dumi(3),9) = zp(k)
+          ENDDO
 
-                dumi(3) = dumi(3) + 1
-              ENDDO
+          DO k=ind_u(g_num,1)+1, ind_u(g_num,2)+1
+            dumint = dumint + 1
+            !p_skip(dumint) = -1
+            !IF(xp(k,1) .GT. -1.0D7) p_skip(dumint) = 1
 
-              DO k=ind_u(dumi(4),1)+1, ind_u(dumi(4),2)+1
-                p_i2(dumi(3),1) = id(k)
+            p_i2(dumint,1) = id(k)
 
-                p_d2(dumi(3),1) = xp(k,1)
-                p_d2(dumi(3),2) = xp(k,2)
-                p_d2(dumi(3),3) = xp(k,3)
-                  
-                p_d2(dumi(3),4) = vp(k,1)
-                p_d2(dumi(3),5) = vp(k,2)
-                p_d2(dumi(3),6) = vp(k,3)
-
-                p_d2(dumi(3),7) = mp(k)
-                p_d2(dumi(3),8) = ap(k)
-                p_d2(dumi(3),9) = zp(k)
-
-                dumi(3) = dumi(3) + 1
-              ENDDO
-
-              CALL match(p_i, p_d, p_i2, p_d2, &
-                      dumi(2), dumi(1), matchok, larr, darr)
-
-              dumi(3) = 1
-              DO k=ind_b(dumi(4),1)+1, ind_b(dumi(4),2)+1
-                If(p_d2(dumi(3),1) .gt. -1.0D7) Then
-                  xp(k,1) = p_d2(dumi(3),1)
-                  xp(k,2) = p_d2(dumi(3),2)
-                  xp(k,3) = p_d2(dumi(3),3)
-
-                  vp(k,1) = p_d2(dumi(3),4)
-                  vp(k,2) = p_d2(dumi(3),5)
-                  vp(k,3) = p_d2(dumi(3),6)
-
-                  mp(k) = p_d2(dumi(3),7)
-                  ap(k) = p_d2(dumi(3),8)
-                  zp(k) = p_d2(dumi(3),9)
-                Endif
-
-                dumi(3) = dumi(3) + 1
-              ENDDO
-
-              DO k=ind_u(dumi(4),1)+1, ind_u(dumi(4),2)+1
-                If(p_d2(dumi(3),1) .gt. -1.0D7) Then
-                  xp(k,1) = p_d2(dumi(3),1)
-                  xp(k,2) = p_d2(dumi(3),2)
-                  xp(k,3) = p_d2(dumi(3),3)
-
-                  vp(k,1) = p_d2(dumi(3),4)
-                  vp(k,2) = p_d2(dumi(3),5)
-                  vp(k,3) = p_d2(dumi(3),6)
-
-                  mp(k) = p_d2(dumi(3),7)
-                  ap(k) = p_d2(dumi(3),8)
-                  zp(k) = p_d2(dumi(3),9)
-                Endif
-
-                dumi(3) = dumi(3) + 1
-              ENDDO
-
-              !!
-              IF(matchok .GE. 0) dom_list2(dumi(4),i) = 1
-              !!
-              DEALLOCATE(p_i2, p_d2)
+            DO l=1, 9
+              p_d2(dumint,l) = -1.0D8
             ENDDO
 
-            DEALLOCATE(p_d, p_i)
-          ELSE
-            DEALLOCATE(p_d2, p_i2)
-          ENDIF
-        ENDIF
+            !p_d2(dumint,1) = xp(k,1)
+            !p_d2(dumint,2) = xp(k,2)
+            !p_d2(dumint,3) = xp(k,3)
+            !  
+            !p_d2(dumint,4) = vp(k,1)
+            !p_d2(dumint,5) = vp(k,2)
+            !p_d2(dumint,6) = vp(k,3)
+
+            !p_d2(dumint,7) = mp(k)
+            !p_d2(dumint,8) = ap(k)
+            !p_d2(dumint,9) = zp(k)
+
+          ENDDO
+
+          !!-----
+          !! Doing Match
+          !!-----
+          CALL match(p_i, p_d, p_i2, p_d2, &
+                  numptcl2, numtmp, matchok, larr, darr)
+
+          !!-----
+          !! Write matched data into the original array
+          !!-----
+          dumint = 0
+          DO k=ind_b(g_num,1)+1, ind_b(g_num,2)+1
+            dumint = dumint + 1
+            !IF(p_skip(dumint) .GE. 0) CYCLE
+            IF(p_d2(dumint,1) .LT. -1.0D7) CYCLE
+            xp(k,1) = p_d2(dumint,1)
+            xp(k,2) = p_d2(dumint,2)
+            xp(k,3) = p_d2(dumint,3)
+
+            vp(k,1) = p_d2(dumint,4)
+            vp(k,2) = p_d2(dumint,5)
+            vp(k,3) = p_d2(dumint,6)
+
+            mp(k) = p_d2(dumint,7)
+            ap(k) = p_d2(dumint,8)
+            zp(k) = p_d2(dumint,9)
+
+          ENDDO
+
+          DO k=ind_u(g_num,1)+1, ind_u(g_num,2)+1
+            dumint = dumint + 1
+            !IF(p_skip(dumint) .GE. 0) CYCLE
+            If(p_d2(dumint,1) .LT. -1.0D7) CYCLE
+            xp(k,1) = p_d2(dumint,1)
+            xp(k,2) = p_d2(dumint,2)
+            xp(k,3) = p_d2(dumint,3)
+
+            vp(k,1) = p_d2(dumint,4)
+            vp(k,2) = p_d2(dumint,5)
+            vp(k,3) = p_d2(dumint,6)
+
+            mp(k) = p_d2(dumint,7)
+            ap(k) = p_d2(dumint,8)
+            zp(k) = p_d2(dumint,9)
+
+          ENDDO
+
+          !!
+          IF(matchok .GE. 0) dom_list2(g_num,i) = 1
+          !!
+          DEALLOCATE(p_i2, p_d2, p_skip)
+        ENDDO
+
+        DEALLOCATE(p_d, p_i)
       ENDDO
       !$OMP END PARALLEL DO
+
+      js_order = 0
 
       !!!!!-- Matching Rate
       !$OMP PARALLEL DO default(shared) private(ind1, ind2, n0, n1, j) schedule(dynamic)
@@ -570,12 +633,12 @@
 !!!!!
 !! READ PARTICLE
 !!!!!
-      SUBROUTINE RD_PART(dir_raw, n_snap, icpu, nbody, larr, &
-        p_dbl, p_int)
+      SUBROUTINE RD_PART(dir_raw, n_snap, icpu, nbody, threadnum, &
+               larr, p_dbl, p_int)
 
       Implicit none
       Integer(kind=4) larr(20)
-      Integer(kind=4) icpu, nbody, n_snap
+      Integer(kind=4) icpu, n_snap, nbody, threadnum
       Character(LEN=larr(11)) dir_raw
 
       Real(kind=8) p_dbl(nbody,9), dumdbl
@@ -594,6 +657,7 @@
 
       Character*(100) fname, snap, domnum
 
+      uout      = 100 + threadnum
       longint   = larr(20)
 
       write(snap, '(I5.5)') n_snap
@@ -601,7 +665,7 @@
       fname = TRIM(dir_raw)//'output_'//TRIM(snap)//'/part_'//&
         TRIM(snap)//'.out'//TRIM(domnum)
 
-      open(newunit=uout, file=TRIM(fname), &
+      open(unit=uout, file=TRIM(fname), &
         form='unformatted', status='old')
       read(uout); read(uout); read(uout); read(uout)
       read(uout); read(uout); read(uout); read(uout)
@@ -669,12 +733,12 @@
 !!!!!
 !! READ PARTICLE_YZICS
 !!!!!
-      SUBROUTINE RD_PART_YZiCS(dir_raw, n_snap, icpu, nbody, larr, &
-        p_dbl, p_int)
+      SUBROUTINE RD_PART_YZiCS(dir_raw, n_snap, icpu, nbody, threadnum,&
+        larr, p_dbl, p_int)
 
       Implicit none
       Integer(kind=4) larr(20)
-      Integer(kind=4) icpu, nbody, n_snap
+      Integer(kind=4) icpu, nbody, threadnum, n_snap
       Character(LEN=larr(11)) dir_raw
 
       Real(kind=8) p_dbl(nbody,9), dumdbl
@@ -694,13 +758,14 @@
       Character*(100) fname, snap, domnum
 
       longint   = larr(20)
+      uout      = 100 + threadnum
 
       write(snap, '(I5.5)') n_snap
       write(domnum, '(I5.5)') icpu
       fname = TRIM(dir_raw)//'output_'//TRIM(snap)//'/part_'//&
         TRIM(snap)//'.out'//TRIM(domnum)
 
-      open(newunit=uout, file=TRIM(fname), &
+      open(unit=uout, file=TRIM(fname), &
         form='unformatted', status='old')
       read(uout); read(uout); read(uout); read(uout)
       read(uout); read(uout); read(uout); read(uout)
@@ -767,19 +832,19 @@
 !!!!!
 !! GET NBODY
 !!!!!
-      SUBROUTINE RD_PART_NBODY(dir_raw, n_snap, dumi, larr)
+      SUBROUTINE RD_PART_NBODY(dir_raw, n_snap, icpu, &
+                threadnum, nbody, larr)
 
       Implicit none
       Integer(kind=4) larr(20)
-      Integer(kind=4) n_snap, dumi(4)
+      Integer(kind=4) n_snap, threadnum, icpu
       Character(LEN=larr(11)) dir_raw
 
 !!!!! Local variables
       Character*(100) fname, snap, domnum
-      Integer(kind=4) uout, nbody, icpu
+      Integer(kind=4) uout, nbody
 
-      icpu      = dumi(3)
-      uout      = 10 + dumi(4)
+      uout      = 100 + threadnum
 
       write(snap, '(I5.5)') n_snap
       write(domnum, '(I5.5)') icpu
@@ -792,7 +857,6 @@
       read(uout) nbody
       close(uout)
 
-      dumi(1) = nbody
       RETURN
       END
 !!!!!

@@ -119,7 +119,7 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 				dset(0) = dmp_mass
 			if horg eq 'g' then dset(1) = 1.
 			if horg eq 'h' then dset(1) = -1.
-	
+
 			void = call_external(ftr_name, 'rv_match', $
 				lset, dset, dir_raw, $
 				id_pt2, ind_b2, ind_u2, pos_pt2, vel_pt2, $
@@ -133,6 +133,9 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 
 				rate(cut(i2)) = rate2(i2)
 
+				IF MAX(WHERE(pos_pt2(ind_b2(i2,0):ind_b2(i2,1),0) * pos_pt2(ind_b2(i2,0):ind_b2(i2,1),1) lt 0.)) GE 0L THEN STOP
+				IF MAX(WHERE(pos_pt2(ind_b2(i2,0):ind_b2(i2,1),0) * pos_pt2(ind_b2(i2,0):ind_b2(i2,1),2) lt 0.)) GE 0L THEN STOP
+				IF MAX(WHERE(pos_pt2(ind_b2(i2,0):ind_b2(i2,1),1) * pos_pt2(ind_b2(i2,0):ind_b2(i2,1),2) lt 0.)) GE 0L THEN STOP
 				pos_pt(output.b_ind(cut(i2),0):output.b_ind(cut(i2),1),*) = $
 					pos_pt2(ind_b2(i2,0):ind_b2(i2,1),*)
 				vel_pt(output.b_ind(cut(i2),0):output.b_ind(cut(i2),1),*) = $
@@ -180,5 +183,14 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 		'dom_list', dom_list, 'rate', rate, $
 		'a_exp', siminfo.aexp)
 
+	js_n1	= N_ELEMENTS(WHERE(pos_pt(*,0) LT 0.)
+	js_n2	= N_ELEMENTS(WHERE(pos_pt(*,1) LT 0.) 
+	js_n3	= N_ELEMENTS(WHERE(pos_pt(*,2) LT 0.) 
+
+	IF(js_n1 NE js_n2 OR js_n1 NE js_n3 OR js_n2 NE js_n3) THEN BEGIN
+		PRINT, "%123123123 -- WARNING --"
+		PRINT, "	WRONG MATCHING HAPPENED"
+		STOP
+	ENDIF
 	return
 End

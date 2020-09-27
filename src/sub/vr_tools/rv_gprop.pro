@@ -1,5 +1,5 @@
 PRO rv_gprop, output, output2, $
-	dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
+	dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, simname=simname, $
 	horg=horg, num_thread=num_thread, n_snap=n_snap, flux_list=flux_list, $
 	SFR_T=SFR_T, SFR_R=SFR_R, MAG_R=MAG_R, skip=skip
 
@@ -36,7 +36,7 @@ PRO rv_gprop, output, output2, $
 	;; Conformal Time to SFactor and Gyr
 	;;-----
 
-	dummy	= get_gyr(output.p_age, dir_raw=dir_raw, dir_lib=dir_lib, $
+	dummy	= get_gyr(output.p_age, dir_raw=dir_raw, dir_lib=dir_lib, simname=simname, $
 		num_thread=num_thread, n_snap=n_snap)
 
 	sfactor = dummy(*,0) & gyr = dummy(*,1)

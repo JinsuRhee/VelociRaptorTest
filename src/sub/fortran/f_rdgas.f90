@@ -33,24 +33,28 @@
           DO j=MAX(nx - nn,1), MIN(nx + nn, n_pix)
           DO k=MAX(ny - nn,1), MIN(ny + nn, n_pix)
             IF(larr(20) .EQ. 1) THEN !DENSITY
-              map(j,k) = map(j,k) + val(i,1)*(mindx/dx(i))**2*val(i,1)
-              mass_map(j,k) = mass_map(j,k) + val(i,1)*(mindx/dx(i))**2
+              map(j,k) = map(j,k) + val(i,1) * &
+                      val(i,1) * mindx**3
+              mass_map(j,k) = mass_map(j,k) + val(i,1) * mindx**3
             ENDIF
 
             IF(larr(20) .EQ. 2) THEN !TEMPERATURE
-              map(j,k) = map(j,k) + val(i,2)*(mindx/dx(i))**2*val(i,1)
-              mass_map(j,k) = mass_map(j,k) + val(i,1)*(mindx/dx(i))**2
+              map(j,k) = map(j,k) + val(i,2) * &
+                      val(i,1) * mindx**3
+              mass_map(j,k) = mass_map(j,k) + val(i,1) * mindx**3
             ENDIF
           ENDDO
           ENDDO
         ENDIF
       ENDDO
 
-      DO i=1, n_pix
-        DO j=1, n_pix
-          IF(mass_map(i,j) .GT. 0) map(i,j) = map(i,j) / mass_map(i,j)
+      !IF(larr(20) .NE. 1) THEN
+        DO i=1, n_pix
+          DO j=1, n_pix
+            IF(mass_map(i,j) .GT. 0) map(i,j) = map(i,j) / mass_map(i,j)
+          ENDDO
         ENDDO
-      ENDDO
+      !ENDIF
 
       RETURN
       END

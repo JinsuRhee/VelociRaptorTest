@@ -43,7 +43,7 @@
 ;	symsize=symsize, ctable=ctable, logscale=logscale
 
 Pro draw_gas, amr, GAL, ind, position=position, dir_lib=dir_lib, $
-	xr=xr, yr=yr, metal=metal, temperature=temperature, density=density
+	xr=xr, yr=yr, metal=metal, temperature=temperature, density=density, maxlev=maxlev
 
 	;;-----
 	;; Setting
@@ -63,9 +63,15 @@ Pro draw_gas, amr, GAL, ind, position=position, dir_lib=dir_lib, $
 	;;-----
 	;; Projection
 	;;-----
+	lev	= LONG(ALOG10(amr.dx / MIN(amr.dx)) / ALOG10(2.0))
+
+	IF ~KEYWORD_SET(maxlev) THEN maxlev = 100L
+
+	cut	= WHERE(lev LE maxlev)
+
 	ftr_name	= dir_lib + '../fortran/f_rdgas.so'
 		larr = lonarr(20) & darr = dblarr(20)
-		larr(0)	= N_ELEMENTS(amr.dx)
+		larr(0)	= N_ELEMENTS(cut)
 		larr(1)	= npix
 
 		IF KEYWORD_SET(density) THEN larr(19) = 1
@@ -74,52 +80,24 @@ Pro draw_gas, amr, GAL, ind, position=position, dir_lib=dir_lib, $
 
 		darr(0)	= mindx
 
-		dum	= DBLARR(N_ELEMENTS(amr.dx),3)
-			dum(*,0)	= amr.density
-			dum(*,1)	= amr.temperature
-			dum(*,2)	= amr.metal
+		dum	= DBLARR(N_ELEMENTS(cut),3)
+			dum(*,0)	= amr.density(cut)
+			dum(*,1)	= amr.temperature(cut)
+			dum(*,2)	= amr.metal(cut)
 		void	= CALL_EXTERNAL(ftr_name, 'f_rdgas', $
-			larr, darr, amr.dx, $
-			amr.x - GAL.xc(ind), amr.y - GAL.yc(ind), amr.z - GAL.zc(ind), amr.mass, $
-			dum, map, DOUBLe(xr), DOUBLE(yr))
+			larr, darr, amr.dx(cut), $
+			amr.x(cut) - GAL.xc(ind), amr.y(cut) - GAL.yc(ind), amr.z(cut) - GAL.zc(ind), $
+			amr.mass(cut), dum, map, DOUBLE(xr), DOUBLE(yr))
 		       
-
-;		map = map * 0.	       
-;	TIC
-;	mass0	= 0.d
-;	FOR i=0L, N_ELEMENTS(amr.dx) - 1L DO BEGIN
-;		x0	= amr.x(i) - GAL.xc(ind)
-;		y0	= amr.y(i) - GAL.yc(ind)
-;		z0	= amr.z(i) - GAL.zc(ind)
-;		dx	= amr.dx(i)
-;
-;		d0	= SQRT(x0^2 + y0^2 + z0^2)
-;		IF d0 GT xr(1) THEN CONTINUE
-;
-;		cutX	= WHERE(mapX GT x0 - dx AND mapX LT x0 + dx AND $
-;			mapY GT y0 - dx AND mapY LT y0 + dx)
-;		IF MAX(cutX) LT 0L THEN CONTINUE
-;
-;		IF KEYWORD_SET(temperature) THEN dum = amr.temperature(i)
-;		IF KEYWORD_SET(density) THEN dum = amr.density(i)
-;		IF KEYWORD_SET(metal) THEN dum = amr.metal(i)
-;		;dum	= dum / (dx * dx)
-;		;map(cutX) = map(cutX) + dum * mindx * mindx
-;		;map(cutX) = map(cutX) + dum * amr.mass(i) * (mindx/dx)^2
-;		map(cutX) = map(cutX) + dum * (mindx/dx)^2
-;		mass0	= mass0 + amr.mass(i)
-;		IF i GE 9590 THEN print, i, dum, map(94,93)
-;		IF i GE 9591 - 1L THEN STOP
-;	ENDFOR
-	;map	= map / mass0
-;	TOC, /verbose
-
 	;;-----
 	;; Draw
 	;;-----
 	map	= rebin(map, npix*10, npix*10)
+
 	Loadct, 33
 	drange	= [0., MAX(alog10(map+1.))]
+	IF KEYWORD_SET(temperature) THEN drange(0) = 4.
+
 	map2	= BYTSCL(ALOG10(map + 1.), min=drange(0), max=drange(1))
 	IF KEYWORD_SET(temperature) THEN map2 = 255B - map2
 	cgImage, map2, position=position, /noerase

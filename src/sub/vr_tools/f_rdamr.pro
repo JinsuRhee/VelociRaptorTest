@@ -80,6 +80,5 @@ FUNCTION f_rdamr, settings, gid, n_snap=n_snap, yzics=yzics, rfact=rfact, $
 	z	= z * siminfo.unit_l / 3.086d21
 
 	cell	= {dx:dx, x:x, y:y, z:z, density:nH, temperature:temp, metal:var(*,7), mass:mass}
-
 	RETURN, cell
 END
