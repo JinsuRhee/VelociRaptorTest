@@ -248,7 +248,6 @@ void OpenMPLinkAcross(Options &opt,
                 for (auto k=0;k<3;k++) x[k]=Pval->GetPosition(k);
                 nt=tree3dfofomp[i]->SearchBallPosTagged(x, param[1], &nn[ompdomain[i].noffset]);
 
-		//if(j<10)cout<<"%123123123 : "<<ThisTask<<" // "<<i<<"   :    "<<nt<<" -- "<<omp_nrecv_total[i]<<endl;
                 for (auto k=0;k<nt;k++) {
                     curIndex=nn[k+ompdomain[i].noffset]+ompdomain[i].noffset;
                     //check that at least on of the particles meets the type criterion if necessary

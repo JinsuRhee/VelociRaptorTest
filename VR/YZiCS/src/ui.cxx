@@ -857,6 +857,8 @@ void GetParamFile(Options &opt)
                     else if (strcmp(tbuff, "Stellar_age_to_yr")==0)
                         opt.stellaragetoyrs = atof(vbuff);
                     //unbinding
+		    else if (strcmp(tbuff, "Leaf_node_size_ubd")==0)
+			opt.uinfo.BucketSize = atoi(vbuff);
                     else if (strcmp(tbuff, "Unbind_flag")==0)
                         opt.uinfo.unbindflag = atoi(vbuff);
                     else if (strcmp(tbuff, "Unbinding_type")==0)
@@ -2309,6 +2311,7 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("w_of_DE", opt.w_de);
 
     //unbinding
+    AddEntry("Leaf_node_size_ubd", opt.uinfo.BucketSize);
     AddEntry("Unbind_flag", opt.uinfo.unbindflag);
     AddEntry("Unbinding_type", opt.uinfo.unbindtype);
     AddEntry("Bound_halos", opt.iBoundHalos);

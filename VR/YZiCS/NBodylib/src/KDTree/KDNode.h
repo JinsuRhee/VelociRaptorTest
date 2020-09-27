@@ -53,6 +53,10 @@ namespace NBody
         /// number of particles associated with node
         UInt_tree_t count;
 
+	// -- JS --
+	// For additioinally constructed leaf nodes
+	Int_t js_leaf=-1;
+
         UInt_tree_t bucket_start;
         UInt_tree_t bucket_end;
         unsigned short numdim;
@@ -71,12 +75,14 @@ namespace NBody
         virtual Int_t GetStart(){return bucket_start;}
         ///Get end index in particle array of particles enclosed by node
         virtual Int_t GetEnd(){return bucket_end;}
+	virtual Int_t GetLeaf(){return js_leaf;}
         //@}
 
         /// \name Simple Set functions
         //@{
         /// set Id --- use with caution
         virtual void SetID(Int_tree_t id){nid=id;}
+	virtual void SetLeaf(Int_t leafox){js_leaf=leafox;}
         //@}
 
         /// \name Find Nearest routines:

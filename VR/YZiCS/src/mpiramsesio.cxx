@@ -38,6 +38,7 @@
     then I could get initial splitting just using mid point between boundaries along each dimension.
     once have that initial splitting just load data then start shifting data around.
 */
+
 void MPIDomainExtentRAMSES(Options &opt){
     Int_t i;
     char buf[2000];
@@ -256,32 +257,32 @@ void MPINumInDomainRAMSES(Options &opt)
                     RAMSES_fortran_skip(Fpartage[i]);
                     RAMSES_fortran_skip (Fpartfam[i]);
                     //skip family
-                    RAMSES_fortran_skip(Fpartage[i]);
+                    //RAMSES_fortran_skip(Fpartage[i]);
                     //skip tag
-                    RAMSES_fortran_skip(Fpartage[i]);
+                    //RAMSES_fortran_skip(Fpartage[i]);
 
                     //data loaded into memory in chunks
                     chunksize    = nchunk = header[i].npartlocal;
                     xtempchunk   = new RAMSESFLOAT  [3*chunksize];
                     mtempchunk   = new RAMSESFLOAT  [chunksize];
                     agetempchunk = new RAMSESFLOAT  [chunksize];
-                    dummy_family = new int [chunksize];
-                    dummy_family2= new char [chunksize];
+                    //dummy_family = new int [chunksize];
+                    //dummy_family2= new char [chunksize];
 
                     //now load position data, mass data, and age data
                     for(idim = 0; idim < header[i].ndim; idim++)RAMSES_fortran_read(Fpart[i], &xtempchunk[idim*nchunk]);
                     RAMSES_fortran_read(Fpartmass[i],  mtempchunk);
-                    //RAMSES_fortran_read(Fpartage[i],   agetempchunk);
+                    RAMSES_fortran_read(Fpartage[i],   agetempchunk);
 
-                    Fpartfam[i].read((char*)&dummy, sizeof(dummy));
-                    Fpartfam[i].read((char*)&dummy_family2[0], dummy);
-                    Fpartfam[i].read((char*)&dummy, sizeof(dummy));
+                    //Fpartfam[i].read((char*)&dummy, sizeof(dummy));
+                    //Fpartfam[i].read((char*)&dummy_family2[0], dummy);
+                    //Fpartfam[i].read((char*)&dummy, sizeof(dummy));
 
-                    for(int ii2=0; ii2<chunksize; ii2 ++) dummy_family[ii2] = dummy_family2[ii2] + 0;
+                    //for(int ii2=0; ii2<chunksize; ii2 ++) dummy_family[ii2] = dummy_family2[ii2] + 0;
 
 		    for (int nn = 0; nn < nchunk; nn++)
                     {
-                            if (opt.partsearchtype == PSTDARK && (dummy_family[nn] == 1) && (fabs((mtempchunk[nn]-dmp_mass)/dmp_mass) < 1e-5))
+                            if (opt.partsearchtype == PSTDARK && (fabs((mtempchunk[nn]-dmp_mass)/dmp_mass) < 1e-5))
                             {
                                     xtempall[ind_DM] = xtempchunk[nn];
                                     xtempall[ind_DM+nbodies] = xtempchunk[nn+nchunk];
@@ -289,11 +290,11 @@ void MPINumInDomainRAMSES(Options &opt)
                                     xtempX[ind_DM] = xtempchunk[nn];
                                     xtempY[ind_DM] = xtempchunk[nn+nchunk];
                                     xtempZ[ind_DM] = xtempchunk[nn+2*nchunk];
-                                    famtempall[ind_DM] = dummy_family[nn];
+                                    famtempall[ind_DM] = 1; //dummy_family[nn];
                                     ind_DM++;
                             }
 
-                            if(opt.partsearchtype == PSTSTAR && dummy_family[nn] == 2)
+                            if(opt.partsearchtype == PSTSTAR && (fabs((mtempchunk[nn]-dmp_mass)/dmp_mass) > 1e-5) && agetempchunk[nn]<0.0) 
                             {
                                     xtempall[ind_ST] = xtempchunk[nn];
                                     xtempall[ind_ST+nbodies] = xtempchunk[nn+nchunk];
@@ -301,7 +302,7 @@ void MPINumInDomainRAMSES(Options &opt)
                                     xtempX[ind_ST] = xtempchunk[nn];
                                     xtempY[ind_ST] = xtempchunk[nn+nchunk];
                                     xtempZ[ind_ST] = xtempchunk[nn+2*nchunk];
-                                    famtempall[ind_ST] = dummy_family[nn];
+                                    famtempall[ind_ST] = 2; //dummy_family[nn];
                                     ind_ST ++;
 				    nnnnn++;
                             }
@@ -315,8 +316,8 @@ void MPINumInDomainRAMSES(Options &opt)
                     }
                     delete[] xtempchunk;
                     delete[] mtempchunk;
-                    delete[] dummy_family;
-                    delete[] dummy_family2;
+                    //delete[] dummy_family;
+                    //delete[] dummy_family2;
 
                     Fpart[i].close();
                     Fpartmass[i].close();
@@ -448,6 +449,7 @@ void MPINumInDomainRAMSES(Options &opt)
                 }
             }
 	}
+
         MPIInitialDomainDecomposition();
 
 	    //////

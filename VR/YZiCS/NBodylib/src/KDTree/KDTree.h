@@ -98,6 +98,8 @@ namespace NBody
         Double_t *period;
         ///number of nodes and leafnodes
         Int_t numnodes,numleafnodes;
+	///For additionally constructed leaf nodes
+	Int_t numleafnodes2=0;
         ///bucket or leaf node size
         Int_t b;
         ///max number of dimensions of tree
