@@ -1,7 +1,7 @@
 ;; Procedure that converts conformal time to scale factor and Gyr
 
 FUNCTION get_gyr, t_conf, $
-	dir_raw=dir_raw, dir_lib=dir_lib, $
+	dir_raw=dir_raw, dir_lib=dir_lib, simname=simname, $
 	num_thread=num_thread, n_snap=n_snap
 
 	;;-----
@@ -14,8 +14,18 @@ FUNCTION get_gyr, t_conf, $
 		'/info_' + string(n_snap,format='(I5.5)') + '.txt'
 	rd_info, siminfo, file=infoname
 
-	restore, dir_lib + 'sub_ftn/conformal_table.sav'
-	restore, dir_lib + 'sub_ftn/LBT_table.sav'
+	IF simname EQ 'NH' THEN BEGIN
+		RESTORE, dir_lib + 'sub_ftn/conformal_table_NH.sav'
+		RESTORE, dir_lib + 'sub_ftn/LBT_table_NH.sav'
+	ENDIF
+	IF simname EQ 'YZiCS' THEN BEGIN
+		RESTORE, dir_lib + 'sub_ftn/conformal_table_YZiCS.sav'
+		RESTORE, dir_lib + 'sub_ftn/LBT_table_YZiCS.sav'
+	ENDIF
+	IF simname EQ 'YZiCS2' THEN BEGIN
+		RESTORE, dir_lib + 'sub_ftn/conformal_table_YZiCS2.sav'
+		RESTORE, dir_lib + 'sub_ftn/LBT_table_YZiCS2.sav'
+	ENDIF
 
 	;;-----
 	;; Allocate Memory

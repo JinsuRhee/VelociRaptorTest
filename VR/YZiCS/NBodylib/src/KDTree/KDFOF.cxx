@@ -43,7 +43,7 @@ namespace NBody
 
         //initial arrays
         //initial arrays
-	//double time10 = (clock() /( (double)CLOCKS_PER_SEC));
+	double time10 = (clock() /( (double)CLOCKS_PER_SEC));
         for (Int_t i=0;i<numparts;i++) {
             pHead[i]=pTail[i]=i;
             pNext[i]=-1;
@@ -55,7 +55,8 @@ namespace NBody
 
         for (Int_t i=0;i<numparts;i++){
 	    //double time10 = (clock() /( (double)CLOCKS_PER_SEC));
-	    
+	   
+	    int jinsu = 0;	
             //if particle already member of group, ignore and go to next particle
             id=bucket[i].GetID();
 
@@ -65,7 +66,7 @@ namespace NBody
             pGroupHead[iGroup]=i;
             Fifo[iTail++]=i;
 
-	    
+
             //if reach the end of particle list, set iTail to zero and wrap around
             if(iTail==numparts) iTail=0;
 
@@ -84,8 +85,8 @@ namespace NBody
                 if (period==NULL) root->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
                 else root->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
 
-		//double time11 = (clock() /( (double)CLOCKS_PER_SEC)); //%123123
-		//if(time11 - time10 > 100*(jinsu+1.) & minnum - 100 ==4){
+		double time11 = (clock() /( (double)CLOCKS_PER_SEC)); //%123123
+		//if(time11 - time10 > 100*(jinsu+1.) & numparts == 1451816){
 		//	jinsu ++;
 	    	//	if(jinsu>0) cout<<" %123123 - "<<minnum-100<<"/ "<<(clock() /( (double)CLOCKS_PER_SEC))-time10<<" / "<<i<<" / "<<pLen[iGroup]<<" / "<<iGroup<<endl;//%123123
 		//}
@@ -101,6 +102,7 @@ namespace NBody
             pLen[iGroup--]=0;
             }
             if (maxlen<pLen[iGroup]){maxlen=pLen[iGroup];}
+	    if(pLen[iGroup]>10) cout<<"%123123 --- "<<id<<" / "<<iGroup<<" / "<<pLen[iGroup]<<" / "<<maxlen<<endl;
         }
 
 
@@ -150,6 +152,9 @@ namespace NBody
         delete[] pGroupHead;
 
         numgroup=iGroup;
+	double time11 = (clock() /( (double)CLOCKS_PER_SEC));
+	cout<<"%123123 "<<time11 - time10<<endl;
+	exit(9);
         return pGroup;
     }
 

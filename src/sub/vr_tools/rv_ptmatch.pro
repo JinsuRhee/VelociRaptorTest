@@ -1,5 +1,5 @@
 PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
-	horg=horg, num_thread=num_thread, n_snap=n_snap, longint=longint, skip=skip
+	horg=horg, num_thread=num_thread, n_snap=n_snap, longint=longint, skip=skip, yzics=yzics
 
 	;;-----
 	;; Skip Process
@@ -113,7 +113,8 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 				lset(4) = n_mpi
 				lset(5) = n_snap
 				lset(10) = strlen(dir_raw)
-				if keyword_set(longint) then lset(19) = 100 ;; For logn int ID
+				IF yzics EQ 1L then lset(18) = 100 ;; For YZiCS ver
+				IF longint EQ 1L then lset(19) = 100 ;; For logn int ID
 
 				dset(0) = dmp_mass
 			if horg eq 'g' then dset(1) = 1.
@@ -127,7 +128,8 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 		
 			;;----- Extract
 			FOR i2=0L, N_ELEMENTS(cut) - 1L DO BEGIN
-				IF rate2(i2) LT match_cutval THEN CONTINUE
+				IF N_itr LT N_itrmax - 1L THEN $
+					IF rate2(i2) LT match_cutval THEN CONTINUE
 
 				rate(cut(i2)) = rate2(i2)
 

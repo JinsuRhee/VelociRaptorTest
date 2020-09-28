@@ -40,6 +40,7 @@ void rv_match(int argc, void *argv[])
   //struct rlimit rl;
   //int result;
 
+  //printf("%s",dir_raw->s);
   //result = getrlimit(RLIMIT_STACK, &rl);
   //if (result == 0)
   //{

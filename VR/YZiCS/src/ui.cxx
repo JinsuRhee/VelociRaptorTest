@@ -706,8 +706,10 @@ void GetParamFile(Options &opt)
                         opt.Ncellfac = atof(vbuff);
                     else if (strcmp(tbuff, "Grid_type")==0)
                         opt.gridtype = atoi(vbuff);
-		    else if (strcmp(tbuff, "Leaf_node_size")==0)
+		    else if (strcmp(tbuff, "Leaf_node_size_main")==0)
                         opt.Bsize = atoi(vbuff);
+		    else if (strcmp(tbuff, "Leaf_node_size_sub")==0)
+                        opt.Bsize_sub = atoi(vbuff);
                     else if (strcmp(tbuff, "Nsearch_velocity")==0)
                         opt.Nvel = atoi(vbuff);
                     else if (strcmp(tbuff, "Nsearch_physical")==0)
@@ -855,6 +857,8 @@ void GetParamFile(Options &opt)
                     else if (strcmp(tbuff, "Stellar_age_to_yr")==0)
                         opt.stellaragetoyrs = atof(vbuff);
                     //unbinding
+		    else if (strcmp(tbuff, "Leaf_node_size_ubd")==0)
+			opt.uinfo.BucketSize = atoi(vbuff);
                     else if (strcmp(tbuff, "Unbind_flag")==0)
                         opt.uinfo.unbindflag = atoi(vbuff);
                     else if (strcmp(tbuff, "Unbinding_type")==0)
@@ -2216,7 +2220,8 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("Grid_type", opt.gridtype);
     AddEntry("Nsearch_velocity", opt.Nvel);
     AddEntry("Nsearch_physical", opt.Nsearch);
-    AddEntry("Leaf_node_size", opt.Bsize);
+    AddEntry("Leaf_node_size_main", opt.Bsize);
+    AddEntry("Leaf_node_size_sub", opt.Bsize_sub);
 
     //substructure search parameters
     AddEntry("Outlier_threshold", opt.ellthreshold);
@@ -2306,6 +2311,7 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("w_of_DE", opt.w_de);
 
     //unbinding
+    AddEntry("Leaf_node_size_ubd", opt.uinfo.BucketSize);
     AddEntry("Unbind_flag", opt.uinfo.unbindflag);
     AddEntry("Unbinding_type", opt.uinfo.unbindtype);
     AddEntry("Bound_halos", opt.iBoundHalos);

@@ -25,7 +25,7 @@ namespace NBody
         short *pBucketFlag=new short[numnodes];
         //flags for memory management
         bool iph,ipt,ipn,ipl;
-
+	int jinsu;
         //arrays used in determining group id.
         //pHead contains the index of the particle at head of the particles group
         //pTail contains tail of the particles group and Next the next in the list
@@ -40,7 +40,6 @@ namespace NBody
         Int_t iGroup=0,iHead=0,iTail=0,id,iid;
         Int_t maxlen=0;
 
-
         //initial arrays
         //initial arrays
 	//double time10 = (clock() /( (double)CLOCKS_PER_SEC));
@@ -54,8 +53,8 @@ namespace NBody
         for (Int_t i=0;i<numnodes;i++) pBucketFlag[i]=0;
 
         for (Int_t i=0;i<numparts;i++){
-	    //double time10 = (clock() /( (double)CLOCKS_PER_SEC));
-	    
+	    double time10 = (clock() /( (double)CLOCKS_PER_SEC));
+	    jinsu = 0; 
             //if particle already member of group, ignore and go to next particle
             id=bucket[i].GetID();
 
@@ -65,7 +64,6 @@ namespace NBody
             pGroupHead[iGroup]=i;
             Fifo[iTail++]=i;
 
-	    
             //if reach the end of particle list, set iTail to zero and wrap around
             if(iTail==numparts) iTail=0;
 
@@ -85,13 +83,12 @@ namespace NBody
                 else root->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
 
 		//double time11 = (clock() /( (double)CLOCKS_PER_SEC)); //%123123
-		//if(time11 - time10 > 100*(jinsu+1.) & minnum - 100 ==4){
+		//if(time11 - time10 > 100*(jinsu+1.) && numparts == 7899629){
 		//	jinsu ++;
 	    	//	if(jinsu>0) cout<<" %123123 - "<<minnum-100<<"/ "<<(clock() /( (double)CLOCKS_PER_SEC))-time10<<" / "<<i<<" / "<<pLen[iGroup]<<" / "<<iGroup<<endl;//%123123
 		//}
             }
 
-	    //if(jinsu>0) cout<<" %123123 - "<<minnum-100<<"/ "<<(clock() /( (double)CLOCKS_PER_SEC))-time10<<" / "<<i<<" / "<<bucket[i].GetID()<<endl;//%123123
 
             if(pLen[iGroup]<minnum){
                 Int_t ii=pHead[pGroupHead[iGroup]];
@@ -102,7 +99,6 @@ namespace NBody
             }
             if (maxlen<pLen[iGroup]){maxlen=pLen[iGroup];}
         }
-
 
         for (Int_t i=0;i<numparts;i++) if(pGroup[bucket[i].GetID()]==-1)pGroup[bucket[i].GetID()]=0;
 
@@ -142,7 +138,6 @@ namespace NBody
             }
             //printf("Found %d groups. Largest is %d with %d particles.\n",iGroup,maxlenid,maxlen);
         }
-
 
         //else printf("No groups found.\n");
 

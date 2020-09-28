@@ -46,7 +46,7 @@ Pro draw_gal, pos, dz, gal, ind, $
 	proj=proj, maxis=maxis, $
 	xr=xr, yr=yr, drange=drange, $
 	n_pix=n_pix, n_pick=n_pick, num_thread=num_thread, $
-	ctable=ctable, logscale=logscale, dsize=dsize, position=position, $
+	ctable=ctable, logscale=logscale, position=position, $
 	bandwidth=bandwidth, kernel=kernel, raw=raw
 
 	;;-----
@@ -138,7 +138,7 @@ Pro draw_gal, pos, dz, gal, ind, $
 	;; Draw
 	;;-----
 	void	= 'js_denmap, float(dx), float(dy), float(dz), xrange=xr, yrange=yr, n_pix=n_pix, num_thread=num_thread' + $
-		', kernel=kernel, dsize=dsize, position=position, ctable=ctable, mode=-1L'
+		', kernel=kernel, position=position, ctable=ctable, mode=-1L'
 	IF(KEYWORD_SET(bandwidth)) THEN void = void + ', bandwidth=bandwidth'
 	IF(KEYWORD_SET(drange)) THEN void = void + ', dr=drange'
 	IF(KEYWORD_SET(logscale)) THEN void = void + ', /logscale'

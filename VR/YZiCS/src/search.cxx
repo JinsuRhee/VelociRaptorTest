@@ -84,6 +84,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
     param[1]=(opt.ellxscale*opt.ellxscale)*(opt.ellphys*opt.ellphys)*(opt.ellhalophysfac*opt.ellhalophysfac);
     param[6]=param[1];
     cout<<"First build tree ... "<<endl;
+
 #ifdef USEOPENMP
     //if using openmp produce tree with large buckets as a decomposition of the local mpi domain
     //to then run local fof searches on each domain before stitching
@@ -92,6 +93,8 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
         Double_t rdist = sqrt(param[1]);
         //determine the omp regions;
         tree = new KDTree(Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
+	cout<<"%123123 - Building Root Tree done"<<endl;
+	cout<<"%123123		# of OMP Regions -> "<<tree->GetNumLeafNodes()<<endl;
         tree->OverWriteInputOrder();
         numompregions=tree->GetNumLeafNodes();
         ompdomain = OpenMPBuildDomains(opt, numompregions, tree, rdist);
@@ -99,6 +102,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
         for (i=0;i<nbodies;i++) storeorgIndex[i]=Part[i].GetID();
         //build local trees
         tree3dfofomp = OpenMPBuildLocalTrees(opt, numompregions, Part, ompdomain, period);
+	cout<<"%123123 - Building OMP Tree done"<<endl;
         if (opt.iverbose) cout<<ThisTask<<": finished building "<<numompregions<<" domains and trees "<<MyGetTime()-time3<<endl;
     }
     else {
@@ -169,6 +173,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
             delete[] ompimport;
             }
         }
+
         //free memory
 #ifndef USEMPI
         delete[] Head;
@@ -202,12 +207,11 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
 #if !defined(USEMPI) && defined(STRUCDEN)
         if (numgroups>0 && (opt.iSubSearch==1&&opt.foftype!=FOF6DCORE))
 #endif
-        tree = new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
+        //tree = new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
         //if running MPI then need to pudate the head, next info
 #ifdef USEMPI
         OpenMPHeadNextUpdate(nbodies, Part, numgroups, pfof, Head, Next);
 #endif
-
     }
     else {
         //posible alteration for all particle search
@@ -609,6 +613,7 @@ private(i,vscale2,mtotregion,vx,vy,vz,vmean)
     Double_t xscaling, vscaling;
     double js_time;
     //run search if 3DFOF found
+    		Particle *js_dum;
     if (numgroups > 0)
     {
 #ifdef USEOPENMP
@@ -633,13 +638,18 @@ private(i,tid,xscaling,vscaling,js_time)
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
             }
             xscaling=1.0/xscaling;vscaling=1.0/vscaling;
+	    	//js_dum=new Particle[numingroup[i]];
+		//for(int js_i=noffset[i]; js_i<noffset[i]+numingroup[i]; js_i++ ) js_dum[js_i - noffset[i]] = Part[js_i];
+		//treeomp[tid]= new KDTree(js_dum, numingroup[i],opt.Bsize_sub,treeomp[tid]->TPHS,tree->KEPAN,100);
             treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],opt.Bsize_sub,treeomp[tid]->TPHS,tree->KEPAN,100);
+		//cout<<"%123123 Search -- "<<numingroup[i]<<" / "<<i<<" / # Nodes : "<<treeomp[tid]->GetNumNodes()<<" / # Leaf Nodes : "<<treeomp[tid]->GetNumLeafNodes()<<" / Bsize : "<<opt.Bsize_sub<<" / Tid : "<<tid<<endl;
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
             delete treeomp[tid];
+	    	//delete js_dum;
             for (Int_t j=0;j<numingroup[i];j++) {
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
             }
-	    if(MyGetTime() - js_time > 10.) cout<<"%123123 - "<<i<<" // "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<MyGetTime() - js_time<<" // "<<endl;
+	    if(MyGetTime() - js_time > 10.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<MyGetTime() - js_time<<"    -     "<<Part[noffset[i]].GetPosition(0)<<" // "<<Part[noffset[i]].GetPosition(1)<<" // "<<Part[noffset[i]].GetPosition(2)<<endl;
         }
 #ifdef USEOPENMP
 }
@@ -2908,7 +2918,9 @@ void SearchSubSub(Options &opt, const Int_t nsubset, vector<Particle> &Partsubse
 #endif
         GetMemUsage(opt, __func__+string("--line--")+to_string(__LINE__)+string("--subelvel--")+to_string(sublevel), (opt.iverbose>=1));
 
+	Double_t js_time_test0;
         for (Int_t i=1;i<=oldnsubsearch;i++) {
+		js_time_test0 = MyGetTime();
             // try running loop over largest objects in serial with parallel inside calls
             // so skip of group is small enough and running with openmp
 #ifdef USEOPENMP
@@ -2917,9 +2929,12 @@ void SearchSubSub(Options &opt, const Int_t nsubset, vector<Particle> &Partsubse
                 continue;
             }
 #endif
+	        cout<<"%123123 Before "<<MyGetTime() - js_time_test0<<endl;
             subpfofold[i]=pfof[subpglist[i][0]];
+	        cout<<"%123123 FOF input "<<MyGetTime() - js_time_test0<<endl;
             subPart=new Particle[subnumingroup[i]];
             for (Int_t j=0;j<subnumingroup[i];j++) subPart[j]=Partsubset[subpglist[i][j]];
+	        cout<<"%123123 Partinput "<<MyGetTime() - js_time_test0<<endl;
             //move to cm if desired
             if (opt.icmrefadjust) {
                 //this routine is in substructureproperties.cxx. Has internal parallelisation
@@ -2927,9 +2942,12 @@ void SearchSubSub(Options &opt, const Int_t nsubset, vector<Particle> &Partsubse
                 //this routine is within this file, also has internal parallelisation
                 AdjustSubPartToPhaseCM(subnumingroup[i], subPart, cmphase);
             }
+	        cout<<"%123123 Before PreCal "<<MyGetTime() - js_time_test0<<endl;
             PreCalcSearchSubSet(opt, subnumingroup[i], subPart, sublevel);
+	        cout<<"%123123 After PreCal "<<MyGetTime() - js_time_test0<<endl;
             subpfof = SearchSubset(opt, subnumingroup[i], subnumingroup[i], subPart,
                 subngroup[i], sublevel, &numcores[i]);
+	        cout<<"%123123 After subpfof "<<MyGetTime() - js_time_test0<<endl;
             CleanAndUpdateGroupsFromSubSearch(opt, subnumingroup[i], subPart, subpfof,
                     subngroup[i], subsubnumingroup[i], subsubpglist[i], numcores[i],
                     subpglist[i], pfof, ngroup, ngroupidoffset_old[i]);

@@ -1,6 +1,6 @@
 function read_vraptor, $
 	halo=halo, galaxy=galaxy, mrange=mrange, n_snap=n_snap, num_thread=num_thread, $
-	dir_catalog=dir_catalog, dir_raw=dir_raw, dir_lib=dir_lib, dir_save=dir_save, $
+	dir_catalog=dir_catalog, dir_raw=dir_raw, dir_lib=dir_lib, dir_save=dir_save, simname=simname, $
 	column_list=column_list, flux_list=flux_list, $
 	silent=silent, verbose=verbose, $
 	rv_raw=rv_raw, rv_tree=rv_tree, rv_id=rv_id, rv_match=rv_match, $
@@ -8,7 +8,7 @@ function read_vraptor, $
 	skip_tree=skip_tree, skip_id=skip_id, skip_match=skip_match, $
 	skip_prop=skip_prop, skip_gprop=skip_gprop, skip_save=skip_save, $
 	SFR_T=SFR_t, SFR_R=SFR_r, MAG_R=MAG_r, $
-	alltype=alltype, longint=longint
+	alltype=alltype, longint=longint, yzics=yzics
 
 ;+)
 ;
@@ -157,8 +157,8 @@ function read_vraptor, $
 		if ~keyword_set(num_thread) then num_tread = long(num_thread)
 
 		rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
-			horg=horg, num_thread=num_thread, longint=longint, $
-			n_snap=n_snap, skip=KEYWORD_SET(skip_match)
+			horg=horg, num_thread=num_thread, longint=KEYWORD_SET(longint), $
+			n_snap=n_snap, skip=KEYWORD_SET(skip_match), yzics=KEYWORD_SET(yzics)
 
 		SAVE, filename=dir_snap + 'rv_ptcl.sav', output2
 	endif else begin
@@ -184,7 +184,7 @@ function read_vraptor, $
 		if ~keyword_set(num_thread) then spawn, 'nproc --all', num_thread
 		if ~keyword_set(num_thread) then num_tread = long(num_thread)
 
-		rv_gprop, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, $
+		rv_gprop, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir_lib, simname=simname, $
 			horg=horg, num_thread=num_thread, n_snap=n_snap, flux_list=flux_list, $
 			SFR_T=SFR_t, SFR_R=SFR_R, MAG_R=MAG_R, skip=KEYWORD_SET(skip_gprop)
 

@@ -522,6 +522,12 @@ namespace NBody
         /// same as above but with full phase-space
         inline Double_t MedianPhs(int d, Int_t k, Int_t start, Int_t end,
             KDTreeOMPThreadPool &, bool balanced=true);
+
+	///----- js ----- (Qsort)
+	inline int js_qorg(int js_start, int js_end, int js_dim, Double_t js_pivot, int js_pivotind);
+	inline void js_qsort(int js_start, int js_end, int js_dim);
+
+
         /// same as above but with possibly a subset of dimensions of full phase space
         /// NOTE Dim DOES NOT DO ANYTHING SPECIAL YET
         //inline Double_t MedianDim(int d, Int_t k, Int_t start, Int_t end, bool balanced=true, Double_t **metric=NULL);

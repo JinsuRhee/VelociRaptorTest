@@ -2,12 +2,13 @@ FUNCTION f_rdptcl, settings, gid, $
 	p_pos=p_pos, p_vel=p_vel, p_gyr=p_gyr, p_sfactor=p_sfactor, $
 	p_mass=p_mass, p_flux=p_flux, p_metal=p_metal, $
 	flux_list=flux_list, $
-	num_thread=num_thread, n_snap=n_snap, longint=longint, raw=raw
+	num_thread=num_thread, n_snap=n_snap, longint=longint, raw=raw, yzics=yzics, alldom=alldom
 
 	;;-----
 	;; Settings
 	;;-----
 	dir_lib = settings.dir_lib & dir_raw = settings.dir_raw & dir_save = settings.dir_save
+	simname	= settings.simname
 
 	;;-----
 	;; Read Particle IDs & Domain & Center & Radius
@@ -64,50 +65,56 @@ FUNCTION f_rdptcl, settings, gid, $
 			larr(2) = n_snap
 			larr(3)	= num_thread
 			larr(10)= strlen(dir_raw)
+			IF KEYWORD_SET(yzics) THEN larr(18) = 100L
 			IF KEYWORD_SET(longint) THEN larr(19)= 100L
 
 		void	= call_external(ftr_name, 'get_ptcl', $
 			larr, darr, dir_raw, pid, pinfo, dlist)
 	ENDIF ELSE BEGIN
-		tmp	= WHERE(dom_list GE 0L)
-		xp = -1. & vp = -1. & mp = -1. & zp = -1. & ap = -1.
-		in0 = -1 & in1 = -1 & in2 = -1 & in3 = -1 & in4 = -1
-		FOR i=0L, N_ELEMENTS(tmp) -1L DO BEGIN
-			IF KEYWORD_SET(longint) THEN $
-				rd_part, part, file=dir_raw + 'output_' + STRING(n_snap,format='(I5.5)') + '/part_' + $
-					STRING(n_snap,format='(I5.5)') + '.out', /velocity, /metal, /time, $
-					icpu=tmp(i) + 1, ncpu=1, /silent, /lver
+		;;----- Get Domain Again
+		dom_list2	= dom_list * 0L - 1L
+		ftr_name	= dir_lib + 'sub_ftn/find_domain.so'
+			larr = LONARR(20) & darr = DBLARR(20)
+			larr(0) = N_ELEMENTS(xc)
+			larr(1) = N_ELEMENTS(dom_list2)
+			larr(2) = num_thread
 
-			IF ~KEYWORD_SET(longint) THEN $
-				rd_part, part, file=dir_raw + 'output_' + STRING(n_snap,format='(I5.5)') + '/part_' + $
-					STRING(n_snap,format='(I5.5)') + '.out', /velocity, /metal, /time, $
-					icpu=tmp(i) + 1, ncpu=1, /silent
+			darr(0) = 50.
 
-			CUT = WHERE(part.family EQ 2L)
-			IF MAX(cut) LT 0L THEN CONTINUE
-			js_makearr, xp, part.xp(cut,*), in0, unitsize=1000000L, type='D'
-			js_makearr, vp, part.vp(cut,*), in1, unitsize=1000000L, type='D'
-			js_makearr, mp, part.mp(cut), in2, unitsize=1000000L, type='D'
-			js_makearr, zp, part.zp(cut), in3, unitsize=1000000L, type='D'
-			js_makearr, ap, part.ap(cut), in4, unitsize=1000000L, type='D'
+		void	= CALL_EXTERNAL(ftr_name, 'find_domain', $
+			xc, yc, zc, Rsize, siminfo.hindex, siminfo.levmax, dom_list2, larr, darr)
+
+		dlist	= WHERE(dom_list2 GE 0L) + 1L
+
+		;;----- Get # of Ptcls
+		nbody	= 0L
+		FOR ii=0L, N_ELEMENTS(dlist)-1L DO BEGIN
+			fname	= dir_raw + 'output_' + STRING(n_snap,format='(I5.5)') + '/part_' + $
+				STRING(n_snap,format='(I5.5)') + '.out' + STRING(dlist(ii),format='(I5.5)')
+			nbodydum = 0L
+			OPENR, 1, fname, /f77_unformatted, SWAP_ENDIAN=swap
+			READU, 1
+			READU, 1
+			READU, 1, nbodydum
+			CLOSE, 1
+			nbody	= nbody + nbodydum
 		ENDFOR
 
-		xp = xp(0L:in0,*) & vp = vp(0L:in1,*) & mp = mp(0L:in2) & zp = zp(0L:in3) & ap = ap(0L:in4)
+		pinfo	= dblarr(nbody,9)
+		ftr_name	= dir_lib + 'sub_ftn/get_ptcl.so'
+			larr = lonarr(20) & darr = dblarr(20)
+			larr(0) = nbody
+			larr(1) = n_elements(dlist)
+			larr(2) = n_snap
+			larr(3)	= num_thread
+			larr(10)= strlen(dir_raw)
+			larr(17)	= 100L
+			IF KEYWORD_SET(yzics) THEN larr(18) = 100L
+			IF KEYWORD_SET(longint) THEN larr(19)= 100L
 
-		bdn	= DBLARR(2,3)
-		bdn(*,0) = [-Rsize, Rsize]*10. + mean(xc)
-		bdn(*,1) = [-Rsize, Rsize]*10. + mean(yc)
-		bdn(*,2) = [-Rsize, Rsize]*10. + mean(zc)
-		cut	= js_bound(xp, bdn, n_dim=3L)
-
-		pinfo	= DBLARR(N_ELEMENTS(cut),9)
-		pinfo(*,0:2)	= xp(cut,*)
-		pinfo(*,3:5)	= vp(cut,*)
-		pinfo(*,6)	= mp(cut)
-		pinfo(*,7)	= ap(cut)
-		pinfo(*,8)	= zp(cut)
-		;; POS, VEL, MASS, AGE, METALLICITY
-		xp = -1. & vp = -1. & mp = -1. & zp = -1. & ap = -1.
+		void	= call_external(ftr_name, 'get_ptcl', $
+			larr, darr, dir_raw, pid, pinfo, dlist)
+		pinfo	= pinfo(0L:larr(16)-1L,*)
 	ENDELSE
 
 	;;-----
@@ -133,7 +140,7 @@ FUNCTION f_rdptcl, settings, gid, $
 	IF KEYWORD_SET(p_mass) THEN $
 		output = create_struct(output, 'mp', mp(cut,*))
 
-	dummy   = get_gyr(pinfo(*,7), dir_raw=dir_raw, dir_lib=dir_lib, $
+	dummy   = get_gyr(pinfo(*,7), dir_raw=dir_raw, dir_lib=dir_lib, simname=simname, $
 		num_thread=num_thread, n_snap=n_snap)
 	IF KEYWORD_SET(p_gyr) OR KEYWORD_SET(p_sfactor) THEN BEGIN
 		IF KEYWORD_SET(p_gyr) THEN $

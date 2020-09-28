@@ -15,6 +15,7 @@ Pro p_VRrun, settings
 			'Dir_raw	= Settings.dir_raw,' + $
 			'Dir_lib	= Settings.dir_lib,' + $
 			'Dir_save	= Settings.dir_save,' + $
+			'simname	= Settings.simname,' + $
 			'Column_list	= Settings.column_list,' + $
 			'Flux_list	= Settings.flux_list,' + $
 			'N_snap		= n_snap,' + $
@@ -26,13 +27,19 @@ Pro p_VRrun, settings
 
 		if Settings.cname eq 'l10006' then $
 			tmp = tmp + ', /longint'
+		IF settings.cname EQ '39990' THEN $
+			tmp = tmp + ', /longint, /yzics'
+
+		IF Settings.cname EQ 'NH' THEN $
+			tmp = tmp + ', /longint, /yzics'
+
 		if Settings.P_VRrun_horg eq 'g' then tmp = tmp + ', /galaxy'
 		if Settings.P_VRrun_horg eq 'h' then tmp = tmp + ', /halo'
 
 		for j=0L, n_elements(Settings.P_VRrun_step) - 1L do $
 			tmp = tmp + ', /' + strtrim(Settings.P_VRrun_step(j),2)
 
-		IF(STRLEN(Settings.P_VRrun_skip) GE 4L) THEN $
+		IF(STRLEN(Settings.P_VRrun_skip(0)) GE 4L) THEN $
 		for j=0L, n_elements(Settings.P_VRrun_skip) - 1L do $
 			tmp = tmp + ', /' + strtrim(Settings.P_VRrun_skip(j),2)
 

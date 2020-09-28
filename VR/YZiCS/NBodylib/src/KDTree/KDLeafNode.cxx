@@ -247,12 +247,25 @@ namespace NBody
     void LeafNode::SearchBallPos(Double_t rd, Double_t fdist2, Int_t iGroup, Particle *bucket, Int_t *Group, Double_t *pdist2, Double_t* off, Int_t target, int dim)
     {
         //first check to see if entire node lies wihtin search distance
-        Double_t maxr0=0.,maxr1=0.;
-        for (int j=0;j<dim;j++){
-            maxr0+=(bucket[target].GetPosition(j)-xbnd[j][0])*(bucket[target].GetPosition(j)-xbnd[j][0]);
-            maxr1+=(bucket[target].GetPosition(j)-xbnd[j][1])*(bucket[target].GetPosition(j)-xbnd[j][1]);
-        }
-        if (maxr0<fdist2&&maxr1<fdist2)
+	// -- JS --
+	Double_t js_pos[3], js_vel[3];  // Center of the leaf node
+	for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (xbnd[js_ii][1] + xbnd[js_ii][0])/2.;
+	if (numdim == 6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (xbnd[js_ii+3][1] + xbnd[js_ii+3][0])/2.;
+	Double_t js_dd, js_dd2;
+
+	js_dd = DistanceSqd(bucket[target].GetPosition(), js_pos);
+	if (dim==6) js_dd += DistanceSqd(bucket[target].GetVelocity(), js_vel);        // Distance btw the target ptcl and the leaf node
+
+	js_dd2 = DistanceSqd(bucket[bucket_start].GetPosition(), js_pos);
+	if (dim==6) js_dd2 += DistanceSqd(bucket[bucket_start].GetVelocity(), js_vel); // Distance btw the farthest ptcl in the leaf node and the leaf node centre
+
+        //Double_t maxr0=0.,maxr1=0.;
+        //for (int j=0;j<dim;j++){
+        //    maxr0+=(bucket[target].GetPosition(j)-xbnd[j][0])*(bucket[target].GetPosition(j)-xbnd[j][0]);
+        //    maxr1+=(bucket[target].GetPosition(j)-xbnd[j][1])*(bucket[target].GetPosition(j)-xbnd[j][1]);
+        //}
+        //if (maxr0<fdist2&&maxr1<fdist2)
+	if (sqrt(js_dd) + sqrt(js_dd2) < sqrt(fdist2))
             for (Int_t i = bucket_start; i < bucket_end; i++)
             {
                 Int_t id=bucket[i].GetID();
@@ -278,12 +291,23 @@ namespace NBody
     void LeafNode::SearchBallPos(Double_t rd, Double_t fdist2, Int_t iGroup, Particle *bucket, Int_t *Group, Double_t *pdist2, Double_t* off, Double_t *x, int dim)
     {
         //first check to see if entire node lies wihtin search distance
-        Double_t maxr0=0.,maxr1=0.;
-        for (int j=0;j<dim;j++){
-            maxr0+=(x[j]-xbnd[j][0])*(x[j]-xbnd[j][0]);
-            maxr1+=(x[j]-xbnd[j][1])*(x[j]-xbnd[j][1]);
-        }
-        if (maxr0<fdist2&&maxr1<fdist2)
+	// -- JS --
+	Double_t js_pos[3], js_vel[3];  // Center of the leaf node
+	for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (xbnd[js_ii][1] + xbnd[js_ii][0])/2.;
+	if (numdim == 6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (xbnd[js_ii+3][1] + xbnd[js_ii+3][0])/2.;
+	Double_t js_dd, js_dd2;
+
+	js_dd = DistanceSqd(x, js_pos, dim);
+
+	js_dd2 = DistanceSqd(bucket[bucket_start].GetPosition(), js_pos, dim);
+
+        //Double_t maxr0=0.,maxr1=0.;
+        //for (int j=0;j<dim;j++){
+        //    maxr0+=(x[j]-xbnd[j][0])*(x[j]-xbnd[j][0]);
+        //    maxr1+=(x[j]-xbnd[j][1])*(x[j]-xbnd[j][1]);
+        //}
+        //if (maxr0<fdist2&&maxr1<fdist2)
+	if(sqrt(js_dd) + sqrt(js_dd2) < sqrt(fdist2))
             for (Int_t i = bucket_start; i < bucket_end; i++)
             {
                 Int_t id=bucket[i].GetID();
@@ -311,12 +335,25 @@ namespace NBody
     void LeafNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, Int_t *tagged, Double_t* off, Int_t target, Int_t &nt, int dim)
     {
         //first check to see if entire node lies wihtin search distance
-        Double_t maxr0=0.,maxr1=0.;
-        for (int j=0;j<dim;j++){
-            maxr0+=(bucket[target].GetPosition(j)-xbnd[j][0])*(bucket[target].GetPosition(j)-xbnd[j][0]);
-            maxr1+=(bucket[target].GetPosition(j)-xbnd[j][1])*(bucket[target].GetPosition(j)-xbnd[j][1]);
-        }
-        if (maxr0<fdist2&&maxr1<fdist2)
+	// -- JS --
+	Double_t js_pos[3], js_vel[3];  // Center of the leaf node
+	for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (xbnd[js_ii][1] + xbnd[js_ii][0])/2.;
+	if (numdim == 6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (xbnd[js_ii+3][1] + xbnd[js_ii+3][0])/2.;
+	Double_t js_dd, js_dd2;
+
+	js_dd = DistanceSqd(bucket[target].GetPosition(), js_pos);
+	if (dim==6) js_dd += DistanceSqd(bucket[target].GetVelocity(), js_vel);        // Distance btw the target ptcl and the leaf node
+
+	js_dd2 = DistanceSqd(bucket[bucket_start].GetPosition(), js_pos);
+	if (dim==6) js_dd2 += DistanceSqd(bucket[bucket_start].GetVelocity(), js_vel); // Distance btw the farthest ptcl in the leaf node and the leaf node centre
+
+        //Double_t maxr0=0.,maxr1=0.;
+        //for (int j=0;j<dim;j++){
+        //    maxr0+=(bucket[target].GetPosition(j)-xbnd[j][0])*(bucket[target].GetPosition(j)-xbnd[j][0]);
+        //    maxr1+=(bucket[target].GetPosition(j)-xbnd[j][1])*(bucket[target].GetPosition(j)-xbnd[j][1]);
+        //}
+        //if (maxr0<fdist2&&maxr1<fdist2)
+	if (sqrt(js_dd) + sqrt(js_dd2) < sqrt(fdist2))
             for (Int_t i = bucket_start; i < bucket_end; i++)
                 tagged[nt++]=i;
         else
@@ -332,12 +369,23 @@ namespace NBody
     void LeafNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, Int_t *tagged, Double_t* off, Double_t *x, Int_t &nt, int dim)
     {
         //first check to see if entire node lies wihtin search distance
-        Double_t maxr0=0.,maxr1=0.;
-        for (int j=0;j<dim;j++){
-            maxr0+=(x[j]-xbnd[j][0])*(x[j]-xbnd[j][0]);
-            maxr1+=(x[j]-xbnd[j][1])*(x[j]-xbnd[j][1]);
-        }
-        if (maxr0<fdist2&&maxr1<fdist2)
+	// -- JS --
+	Double_t js_pos[3], js_vel[3];  // Center of the leaf node
+	for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (xbnd[js_ii][1] + xbnd[js_ii][0])/2.;
+	if (dim == 6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (xbnd[js_ii+3][1] + xbnd[js_ii+3][0])/2.;
+	Double_t js_dd, js_dd2;
+
+	js_dd = DistanceSqd(x, js_pos, dim);
+
+	js_dd2 = DistanceSqd(bucket[bucket_start].GetPosition(), js_pos, dim);
+
+        //Double_t maxr0=0.,maxr1=0.;
+        //for (int j=0;j<dim;j++){
+        //    maxr0+=(x[j]-xbnd[j][0])*(x[j]-xbnd[j][0]);
+        //    maxr1+=(x[j]-xbnd[j][1])*(x[j]-xbnd[j][1]);
+        //}
+        //if (maxr0<fdist2&&maxr1<fdist2)
+	if (sqrt(js_dd) + sqrt(js_dd2) < sqrt(fdist2))
             for (Int_t i = bucket_start; i < bucket_end; i++)
                 tagged[nt++]=i;
         else
@@ -358,12 +406,23 @@ namespace NBody
     void LeafNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, vector<Int_t> &tagged, Double_t* off, Int_t target, int dim)
     {
         //first check to see if entire node lies wihtin search distance
-        Double_t maxr0=0.,maxr1=0.;
-        for (int j=0;j<dim;j++){
-            maxr0+=(bucket[target].GetPosition(j)-xbnd[j][0])*(bucket[target].GetPosition(j)-xbnd[j][0]);
-            maxr1+=(bucket[target].GetPosition(j)-xbnd[j][1])*(bucket[target].GetPosition(j)-xbnd[j][1]);
-        }
-        if (maxr0<fdist2&&maxr1<fdist2)
+	// -- JS --
+	Double_t js_pos[3], js_vel[3];  // Center of the leaf node
+	for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (xbnd[js_ii][1] + xbnd[js_ii][0])/2.;
+	if (dim == 6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (xbnd[js_ii+3][1] + xbnd[js_ii+3][0])/2.;
+	Double_t js_dd, js_dd2;
+
+	js_dd = DistanceSqd(bucket[target].GetPosition(), js_pos, dim);
+
+	js_dd2 = DistanceSqd(bucket[bucket_start].GetPosition(), js_pos, dim);
+
+        //Double_t maxr0=0.,maxr1=0.;
+        //for (int j=0;j<dim;j++){
+        //    maxr0+=(bucket[target].GetPosition(j)-xbnd[j][0])*(bucket[target].GetPosition(j)-xbnd[j][0]);
+        //    maxr1+=(bucket[target].GetPosition(j)-xbnd[j][1])*(bucket[target].GetPosition(j)-xbnd[j][1]);
+        //}
+        //if (maxr0<fdist2&&maxr1<fdist2)
+	if( sqrt(js_dd) + sqrt(js_dd2) < sqrt(fdist2))
             for (Int_t i = bucket_start; i < bucket_end; i++)
                 tagged.push_back(i);
         else
@@ -379,12 +438,27 @@ namespace NBody
     void LeafNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, vector<Int_t> &tagged, Double_t* off, Double_t *x, int dim)
     {
         //first check to see if entire node lies wihtin search distance
-        Double_t maxr0=0.,maxr1=0.;
-        for (int j=0;j<dim;j++){
-            maxr0+=(x[j]-xbnd[j][0])*(x[j]-xbnd[j][0]);
-            maxr1+=(x[j]-xbnd[j][1])*(x[j]-xbnd[j][1]);
-        }
-        if (maxr0<fdist2&&maxr1<fdist2)
+	Double_t js_pos[3], js_vel[3];  // Center of the leaf node
+	for(int js_ii=0; js_ii<3; js_ii++) js_pos[js_ii] = (xbnd[js_ii][1] + xbnd[js_ii][0])/2.;
+	if (numdim == 6) for(int js_ii=0; js_ii<3; js_ii++) js_vel[js_ii] = (xbnd[js_ii+3][1] + xbnd[js_ii+3][0])/2.;
+	Double_t js_dd, js_dd2;
+
+	js_dd = 0.;
+	for (int j=0; j<dim; j++) js_dd += (x[j] - js_pos[j])*(x[j] - js_pos[j]);
+	if (dim==6) for (int j=0; j<dim; j++) js_dd += (x[j] - js_vel[j])*(x[j] - js_vel[j]);
+
+	js_dd2 = DistanceSqd(bucket[bucket_start].GetPosition(), js_pos);
+	if (numdim==6) js_dd2 += DistanceSqd(bucket[bucket_start].GetVelocity(), js_vel); 
+
+        //first check to see if entire node lies wihtin search distance
+
+		//Double_t maxr0=0.,maxr1=0.;
+		//for (int j=0;j<dim;j++){
+		//    maxr0+=(x[j]-xbnd[j][0])*(x[j]-xbnd[j][0]);
+		//    maxr1+=(x[j]-xbnd[j][1])*(x[j]-xbnd[j][1]);
+		//}
+		//if (maxr0<fdist2&&maxr1<fdist2)
+	if(sqrt(js_dd) + sqrt(js_dd2) < sqrt(fdist2))
             for (Int_t i = bucket_start; i < bucket_end; i++)
                 tagged.push_back(i);
         else
@@ -547,7 +621,7 @@ namespace NBody
 
         //first check to see if entire node lies wihtin search distance
         //if (maxr0<fdist2&&maxr1<fdist2){
-	if(js_dd + js_dd2 < fdist2){
+	if(sqrt(js_dd) + sqrt(js_dd2) < sqrt(fdist2)){
             Int_t id;
             for (Int_t i = bucket_start; i < bucket_end; i++){
                 id=bucket[i].GetID();

@@ -125,18 +125,19 @@ Int_t OpenMPLocalSearch(Options &opt,
 	    cout<<" -123123 Z : "<<i<<" : "<<ompdomain[i].bnd[2][0]<<" ~ "<<ompdomain[i].bnd[2][1]<<" // "<<ompdomain[i].ncount<<endl;
 
     }
-    //int ompminsize2=0;
+    int ompminsize2=0;
     /////
 
     cout<<ThisTask<<": Starting local openmp searches "<<endl;
     #pragma omp parallel default(shared) \
-    private(i,p3dfofomp,orgIndex, ng, time00)
+    private(i,p3dfofomp,orgIndex, ng, time00, ompminsize2)
     {
     #pragma omp for schedule(dynamic) nowait reduction(+:ngtot)
     for (i=0;i<numompregions;i++) {
 	    time00	= MyGetTime();
+	    ompminsize2 = ompminsize;// + i + 1;
         if (opt.partsearchtype==PSTALL && opt.iBaryonSearch>1) p3dfofomp=tree3dfofomp[i]->FOFCriterionSetBasisForLinks(fofcmp,param,ng,ompminsize,0,0,FOFchecktype, &Head[ompdomain[i].noffset], &Next[ompdomain[i].noffset]);
-        else p3dfofomp=tree3dfofomp[i]->FOF(rdist,ng,ompminsize,0, &Head[ompdomain[i].noffset], &Next[ompdomain[i].noffset]);
+        else p3dfofomp=tree3dfofomp[i]->FOF(rdist,ng,ompminsize2,0, &Head[ompdomain[i].noffset], &Next[ompdomain[i].noffset]);
         if (ng > 0) {
             for (int j=ompdomain[i].noffset;j<ompdomain[i].noffset+ompdomain[i].ncount;j++)
             if (p3dfofomp[Part[j].GetID()]>0)

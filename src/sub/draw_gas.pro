@@ -1,64 +1,106 @@
 ; :Keywords:
+;    pos: in, required, type=float / double
+;	  N_ptcl X N_dim
 ;
-;    center: in, required, type=float / double
-;         N_dim
-;         Center of a galaxy in Kpc unit
+;    mass: in, required, type=float / double
+;	  mass of ptcls in solar mass
+;
+;    flux: in, required, type=float / double
+;	  flux of ptcls
+;
+;    center: in, type=float / double
+;	  center of galaxies. If set, coordinates are nomalized for the center to be origin
+;
+;    rot_axis: in, type=float / double
+;	  rotation axis (angular momentum vector) to be used to project galaxies
+;
+;    proj: in, type=float / double
+;	  projection.
+;	  ['xy', 'faceon', 'edgeon']
+;
+;    weight: in, required, type=float / double
+;	  To give a weight to each ptcl
+;	  ['mass', 'flux']
+;
+;    n_pick: in, type=long
+;	  To sample the points in the case of large number of ptcls are given
+;
+;    n_pix: in, type=long
+;	  # of pixels on a direction
 ;
 ;    xr, yr: in, required, type=float / double
-;         ranges
+;	  figure ranges
 ;
-;    height: in, required, type=float / double
-;         column height
+;    ctable: in, required, type= long
+;         loadct value
 ;
-;    n_snap: in, required, type=long
-;	  Snapshot number (1 to be the first)
-;
-;    cname: in, required, type=string
-;	  Cluster Name
-;    dom_list: in, required, type=long
-;	  Domain list
-;
+;    drange: in, optional, type=float /double
+;         color range
 
-Pro draw_gas, $
-	center=center, xr=xr, yr=yr, height=height, $
-	n_snap=n_snap, cname=cname, dom_list=dom_list
+;Pro draw_gal, gal, ptcl, id=id, proj=proj, weight=weight, maxis=maxis, $
+;	xr=xr, yr=yr, drange=drange, $
+;	n_pix=n_pix, n_pick=n_pick, num_thread=num_thread, $
+;	symsize=symsize, ctable=ctable, logscale=logscale
+
+Pro draw_gas, amr, GAL, ind, position=position, dir_lib=dir_lib, $
+	xr=xr, yr=yr, metal=metal, temperature=temperature, density=density, maxlev=maxlev
 
 	;;-----
-	;; Settings
+	;; Setting
 	;;-----
-
-	raw_data	= '/storage5/FORNAX/KISTI_OUTPUT/' + strtrim(cname,2) + '/output_' + $
-		string(n_snap,format='(I5.5)') + '/'
-	vr_data		= '/storage5/FORNAX/VELOCI_RAPTOR/' + strtrim(cname,2) + '/galaxy/snap_' + $
-	       string(n_snap,format='(I3.3)') + '/'	
+	mindx	= MIN(amr.dx)
 	;;-----
-	;; Sim info
+	;; Make a Map
 	;;-----
+	npix	= LONG(MAX([xr(1) - xr(0), yr(1) - yr(0)]) / mindx) + 1L
 
-	rd_info, siminfo, file=raw_data + 'info_' + string(n_snap,format='(I5.5)') + '.txt'
+	map	= DBLARR(npix, npix)
+
+	mapX = FINDGEN(npix) + 0.5 & mapY = FINDGEN(npix) + 0.5
+	mapX = REBIN(mapX, npix, npix) & mapY = REBIN(TRANSPOSE(mapY), npix, npix)
+	mapX = mapX * mindx + xr(0) & mapY = mapY * mindx  + yr(0)
 
 	;;-----
-	;; Read Hydro and AMR
+	;; Projection
 	;;-----
-	center2	= center * 3.08568025d21 / siminfo.unit_l
-	radius2	= radius * 3.08568025d21 / siminfo.unit_l
-	for i=0L, n_elements(dom_list)-1L do begin
-		rd_hydro, h, file=raw_data + 'hydro_' + string(n_snap,format='(I5.5)') + '.out', icpu=dom_list(i), /silent
-		rd_amr, a, file=raw_data + 'amr_' + string(n_snap,format='(I5.5)') + '.out', icpu=dom_list(i), /silent
+	lev	= LONG(ALOG10(amr.dx / MIN(amr.dx)) / ALOG10(2.0))
 
-		amr2cell, a, h, g, lmin=9, xr=[center2(0)-radius2*5., center2(0)+radius2*5.], $
-			yr=[center2(1)-radius2*5., center2(1)+radius2*5.], $
-			zr=[center2(2)-radius2*5., center2(2)+radius2*5.]
+	IF ~KEYWORD_SET(maxlev) THEN maxlev = 100L
 
-		if i eq 0L then begin
-			n = g.n & dx = g.dx & x = g.x & y = g.y & z = g.z & var = g.var
-		endif else begin
-			n = [n, g.n] & dx = [dx, g.dx] & x = [x, g.x] & y = [y, g.y] & z = [z, g.z] & var = [var, g.var]
-		endelse
-		print, i
-	endfor
-	help, n, dx, x, y, z, var
-	stop
+	cut	= WHERE(lev LE maxlev)
+
+	ftr_name	= dir_lib + '../fortran/f_rdgas.so'
+		larr = lonarr(20) & darr = dblarr(20)
+		larr(0)	= N_ELEMENTS(cut)
+		larr(1)	= npix
+
+		IF KEYWORD_SET(density) THEN larr(19) = 1
+		IF KEYWORD_SET(temperature) THEN larr(19) = 2
+		IF KEYWORD_SET(metal) THEN larr(19) = 3
+
+		darr(0)	= mindx
+
+		dum	= DBLARR(N_ELEMENTS(cut),3)
+			dum(*,0)	= amr.density(cut)
+			dum(*,1)	= amr.temperature(cut)
+			dum(*,2)	= amr.metal(cut)
+		void	= CALL_EXTERNAL(ftr_name, 'f_rdgas', $
+			larr, darr, amr.dx(cut), $
+			amr.x(cut) - GAL.xc(ind), amr.y(cut) - GAL.yc(ind), amr.z(cut) - GAL.zc(ind), $
+			amr.mass(cut), dum, map, DOUBLE(xr), DOUBLE(yr))
+		       
+	;;-----
+	;; Draw
+	;;-----
+	map	= rebin(map, npix*10, npix*10)
+
+	Loadct, 33
+	drange	= [0., MAX(alog10(map+1.))]
+	IF KEYWORD_SET(temperature) THEN drange(0) = 4.
+
+	map2	= BYTSCL(ALOG10(map + 1.), min=drange(0), max=drange(1))
+	IF KEYWORD_SET(temperature) THEN map2 = 255B - map2
+	cgImage, map2, position=position, /noerase
 
 
 End
