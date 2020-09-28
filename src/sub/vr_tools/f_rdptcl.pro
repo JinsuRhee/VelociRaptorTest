@@ -8,6 +8,7 @@ FUNCTION f_rdptcl, settings, gid, $
 	;; Settings
 	;;-----
 	dir_lib = settings.dir_lib & dir_raw = settings.dir_raw & dir_save = settings.dir_save
+	simname	= settings.simname
 
 	;;-----
 	;; Read Particle IDs & Domain & Center & Radius
@@ -139,7 +140,7 @@ FUNCTION f_rdptcl, settings, gid, $
 	IF KEYWORD_SET(p_mass) THEN $
 		output = create_struct(output, 'mp', mp(cut,*))
 
-	dummy   = get_gyr(pinfo(*,7), dir_raw=dir_raw, dir_lib=dir_lib, $
+	dummy   = get_gyr(pinfo(*,7), dir_raw=dir_raw, dir_lib=dir_lib, simname=simname, $
 		num_thread=num_thread, n_snap=n_snap)
 	IF KEYWORD_SET(p_gyr) OR KEYWORD_SET(p_sfactor) THEN BEGIN
 		IF KEYWORD_SET(p_gyr) THEN $
