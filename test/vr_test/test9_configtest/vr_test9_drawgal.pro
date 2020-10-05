@@ -1,6 +1,6 @@
 PRO vr_test9_drawgal, settings, masscut=masscut, n_pix=n_pix, n_snap=n_snap, drange=drange, linking=linking, eps=eps, cf=cf
 
-	testname	= 'comb0'
+	testname	= 'finver'
 	settings.dir_catalog_pre	= settings.dir_catalog_pre + STRING(linking(0),'(F4.2)') + '_' + $
 		STRING(linking(1),'(F4.2)') + '_'
 
