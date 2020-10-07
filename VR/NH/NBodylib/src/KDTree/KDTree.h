@@ -74,7 +74,7 @@ namespace NBody
         /// 0 is physical tree, 1 is projected physical, 2 is velocity, 3 is full phase-space, 4 is a sub-space of the full space specified by a metric
         /// ie: TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4
         //@{
-        const static int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4,TPHYSF=5,TOMP=5;
+        const static int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4,TPHYSF=5,TOMP=6;
         //@}
 
         /// \name Public variables that specify kernaltype
@@ -173,6 +173,9 @@ namespace NBody
         //@{
         ///uses prviate function pointers to recursive build the tree
         Node* BuildNodes(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_TOMP(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_TPHYSF(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+	Node* BuildNodes_JS(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
         //set node ids
         void BuildNodeIDs();
         //recursive setting of ids
@@ -423,6 +426,8 @@ namespace NBody
         //@{
 
         /// simple physical FOF search, velocity FOF, and 6D phase FOF.
+	void FOF_js_SearchNode(Double_t js_search[6][2], vector<Int_t> &js_nodelist, Node* np, Particle *bucket, Double_t fdist2);
+	void FOF_js_AllSearch(vector<Int_t> js_nodelist, Int_t *js_Fifo, Double_t rd, Double_t fdist2, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target);
 	void FOFSearch_js(Node *node, Double_t rd, Double_t fdist2, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target);
         Int_t *FOF_js(Double_t fdist, Int_t &numgroup, Int_t minnum=8, int order=0,
             Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL,
