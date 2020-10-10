@@ -60,6 +60,7 @@ namespace NBody
 	Int_t js_LorR=0;
 	Int_t js_mask=-1;
 	Double_t js_center[6];
+	Double_t js_farthest=-1;
 	vector<Node*> js_nearleaf;
         UInt_tree_t bucket_start;
         UInt_tree_t bucket_end;
@@ -89,6 +90,7 @@ namespace NBody
 	virtual Node *GetNearLeaf(int i){return js_nearleaf[i];}
 	virtual Double_t GetCenter(int i){return js_center[i];}
 	virtual int GetNumDim(){return numdim;}
+	virtual Double_t GetFarthest(){return js_farthest;}
         //@}
 
         /// \name Simple Set functions
@@ -103,6 +105,7 @@ namespace NBody
 	virtual void SetMask(Int_t mask){js_mask=mask;}
 	virtual void SetCenter(Double_t centertmp, int i){js_center[i]=centertmp;}
 	virtual void SetNearLeaf(Node *js_node){js_nearleaf.push_back(js_node);}
+	virtual void SetFarthest(Double_t js_far){js_farthest=js_far;}
         //@}
 
         /// \name Find Nearest routines:

@@ -252,8 +252,7 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPosition(js_j);
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 	
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -319,8 +318,7 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 	
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -385,8 +383,7 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -430,8 +427,7 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -480,8 +476,7 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -526,8 +521,7 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -686,7 +680,11 @@ namespace NBody
     {
         //if bucket already linked and particle already part of group, do nothing.
 
+	//if(target>181025) exit(9);
+	//if(target!=181025) return;
         if(BucketFlag[nid]&&Head[target]==Head[bucket_start])return;
+	
+	
         //this flag is initialized to !=0 and if entire bucket searched and all particles already linked,
         //then BucketFlag[nid]=1
         int flag=Head[bucket_start];
@@ -704,13 +702,13 @@ namespace NBody
 	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
 	js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-	js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
 	// -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
 	//Skip this node
-		return;
+		//return;
+		flag=0;
 	}
 	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
 	//The whole node is enclosed by the linking-length sphere
@@ -757,6 +755,12 @@ namespace NBody
 		}
         }
         if (flag) BucketFlag[nid]=1;
+
+	//if(target==181025){
+	//	for(int i=bucket_start; i<bucket_end; i++){
+	//		cout<<"%123123	"<<bucket[i].GetPosition(0)<<" / "<<bucket[i].GetPosition(1)<<" / "<<bucket[i].GetPosition(2)<<" / "<<nid<<" / "<<BucketFlag[nid]<<" / "<<sqrt(js_rr)<<" / "<<sqrt(js_dist)<<" / "<<sqrt(fdist2)<<endl;
+	//	}
+	//}
     }
     void LeafNode::FOFSearchCriterion(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target)
     {
