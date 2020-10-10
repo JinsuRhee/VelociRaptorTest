@@ -807,8 +807,8 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 	    if(treetype != TOMP){
             	Double_t js_center[6], js_centertmp, js_pos[6];
             	Double_t js_dd=-1, js_dd2;
-            	js_centertmp = 0.;
             	for(int js_j=0; js_j<ND; js_j++){
+            		js_centertmp = 0.;
             	        for(int js_i=start; js_i<k+1; js_i++){
             	                js_centertmp += bucket[js_i].GetPhase(js_j);
             	        }    
@@ -826,12 +826,13 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
             	left->SetFarthest(js_dd);
 
             	// right
-            	js_centertmp = 0.; js_dd=-1;
+            	js_dd=-1;
             	for(int js_j=0; js_j<ND; js_j++){
+			js_centertmp = 0.;
             	        for(int js_i=k+1; js_i<end; js_i++){
             	                js_centertmp += bucket[js_i].GetPhase(js_j);
             	        }    
-            	        js_center[js_j] = js_centertmp / (end - k+1);
+            	        js_center[js_j] = js_centertmp / (end - (k+1));
             	}    
             	for(int js_i=0; js_i<ND; js_i++) right->SetCenter(js_center[js_i],js_i);
 
@@ -909,7 +910,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
         if (size <= b2)
         {
             if (ibuildinparallel == false) numleafnodes++;
-
+TEEEST:
 	    // -----
 	    LeafNode *js_LN;
 	    js_LN = new LeafNode(id, start, end, js_bnd, ND);
@@ -921,34 +922,67 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
         }
 	else
 	{
-		//bool irearrangeandbalance=true;
-		//if (ikeepinputorder) irearrangeandbalance=false;
+		bool irearrangeandbalance=true;
+		if (ikeepinputorder) irearrangeandbalance=false;
 
 		//double js_dx = 0;
+		//int js_ii, js_crit=-1;
 		//double js_dx2;
 		//int js_nn = (end - start) / 8;
 
 		//for(int js_i=0; js_i<ND; js_i++){
-		//    js_qsort(start, end-1, js_i);
+		//    js_ii=js_i;
+		//    js_qsort(js_ind0, js_ind1, js_ii);
 		//    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
 	    	//	    js_dx2 = bucket[js_ind+1].GetPhase(js_i) - bucket[js_ind].GetPhase(js_i);
     		//	    js_dx2 = abs(js_dx2);
 		//	    if(js_dx2 > js_dx){
 		//		    js_dx = js_dx2;
-		//		    k = js_ind;
-		//		    splitdim = js_i;
-		//		    splitvalue = (bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
+		//		    if(js_dx > 1.0*js_rdist){
+		//			    k = js_ind;
+		//			    splitdim = js_i;
+		//			    splitvalue = bucket[k].GetPhase(splitdim);//(bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
+		//			    js_crit = 1;
+		//			    break;
+		//		    }
 		//    	    }
 	    	//    }
+		//    if(js_crit>0) break;
 		//}
-	    // Balanced Tree
-		    bool irearrangeandbalance=true;
-		    if (ikeepinputorder) irearrangeandbalance=false;
 
+		//if(js_crit<0){
+	    // Balanced Tree
+		    //bool irearrangeandbalance=true;
+		    //if (ikeepinputorder) irearrangeandbalance=false;
+
+		//for(int js_iii=0; js_iii<ND; js_iii++){
+		//	if(js_bnd[js_iii][1] - js_bnd[js_iii][0] < js_rdist){
+		//		break;
+		//	}
+		//	if(js_iii == ND - 1) goto TEEEST;
+		//}
 		    k = start + (size - 1) / 2;
-		    //splitvalue = (bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
 		    splitdim = DetermineSplitDim(start, end, js_bnd, otp);
-		    splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
+		//    splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
+		//}
+		//
+		//
+		js_qsort(js_ind0, js_ind1, splitdim);
+		double js_dx2, js_dx=0;
+		int js_nn = (end - start) / 8;
+
+		    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
+	    		    js_dx2 = bucket[js_ind+1].GetPhase(splitdim) - bucket[js_ind].GetPhase(splitdim);
+    			    js_dx2 = abs(js_dx2);
+			    if(js_dx2 > js_dx){
+				    js_dx = js_dx2;
+				    k = js_ind;
+				    splitvalue = bucket[k].GetPhase(splitdim);//(bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
+		    	    }
+	    	    }
+
+
+
 	}
 
 	//Now Split Nodes
@@ -994,8 +1028,8 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
             // left
             Double_t js_center[6], js_centertmp, js_pos[6];
             Double_t js_dd=-1, js_dd2;
-            js_centertmp = 0.;
             for(int js_j=0; js_j<ND; js_j++){
+		    js_centertmp=0.;
                     for(int js_i=start; js_i<k+1; js_i++){
                             js_centertmp += bucket[js_i].GetPhase(js_j);
                     }    
@@ -1013,12 +1047,13 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
             left->SetFarthest(js_dd);
 
             // right
-            js_centertmp = 0.; js_dd=-1;
+            js_dd=-1;
             for(int js_j=0; js_j<ND; js_j++){
+		    js_centertmp=0.;
                     for(int js_i=k+1; js_i<end; js_i++){
                             js_centertmp += bucket[js_i].GetPhase(js_j);
                     }    
-                    js_center[js_j] = js_centertmp / (end - k+1);
+                    js_center[js_j] = js_centertmp / (end - (k+1));
             }    
             for(int js_i=0; js_i<ND; js_i++) right->SetCenter(js_center[js_i],js_i);
 
@@ -1064,6 +1099,48 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 	    left->SetParent((Node*)js_SP);
 	    right->SetParent((Node*)js_SP);
 
+            ///// Save the largest distance
+            // left
+            Double_t js_center[6], js_centertmp, js_pos[6];
+            Double_t js_dd=-1, js_dd2;
+            for(int js_j=0; js_j<ND; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=start; js_i<k+1; js_i++){
+                            js_centertmp += bucket[js_i].GetPhase(js_j);
+                    }    
+                    js_center[js_j] = js_centertmp / (k+1 - start);
+            }    
+            for(int js_i=0; js_i<ND; js_i++) left->SetCenter(js_center[js_i],js_i);
+
+            for(int js_i=start; js_i<k+1; js_i++){
+                    for(int js_j=0; js_j<ND; js_j++) js_pos[js_j] = bucket[js_i].GetPhase(js_j);
+                    js_dd2 = DistanceSqd(js_pos, js_center, ND); 
+                    if(js_dd2 > js_dd) {
+                            js_dd = js_dd2;
+                    }    
+            }    
+            left->SetFarthest(js_dd);
+
+            // right
+            js_dd=-1;
+            for(int js_j=0; js_j<ND; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=k+1; js_i<end; js_i++){
+                            js_centertmp += bucket[js_i].GetPhase(js_j);
+                    }    
+                    js_center[js_j] = js_centertmp / (end - (k+1));
+            }    
+            for(int js_i=0; js_i<ND; js_i++) right->SetCenter(js_center[js_i],js_i);
+
+            for(int js_i=k+1; js_i<end; js_i++){
+                    for(int js_j=0; js_j<ND; js_j++) js_pos[js_j] = bucket[js_i].GetPhase(js_j);
+                    js_dd2 = DistanceSqd(js_pos, js_center, ND); 
+                    if(js_dd2 > js_dd) {
+                            js_dd = js_dd2;
+                    }    
+            }    
+            right->SetFarthest(js_dd);
+	    //////
 	    return js_SP;
             //return new SplitNode(id, splitdim, splitvalue, size, js_bnd, start, end, ND,
 	    //    left, right);
@@ -1103,7 +1180,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 					    js_dx = js_dx2;
 				    }
 			    }
-			    if(js_dx > 2.0*js_rdist){
+			    if(js_dx > 1.0*js_rdist){
 				    js_ompskip=-1;
 				    break;
 			    }
@@ -1145,10 +1222,11 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 		    	    js_dx = js_dx2;
 		    	    k = js_ind;
 		    	    splitdim = js_i;
-		    	    splitvalue = (bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
+		    	    //splitvalue = (bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
+		    	    splitvalue = bucket[k].GetPhase(splitdim);
 		        }
 	    	    }
-		    if(js_dx>2.0*js_rdist) break;
+		    if(js_dx>1.0*js_rdist) break;
 		}
 	}
 
@@ -1592,7 +1670,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 	    for(int js_i=0; js_i<ND; js_i++) JSGetBoundary(js_i, 0, numparts, js_bnd[js_i], otp);
 
             if(treetype == TOMP) root=BuildNodes_TOMP(0,numparts, otp, js_bnd);
-	    else if(treetype == TPHYSF) root=BuildNodes_TPHYSF(0,numparts, otp, js_bnd);
+	    else if(treetype == TPHYSF || treetype == TPHS) root=BuildNodes_TPHYSF(0,numparts, otp, js_bnd);
 	    else root=BuildNodes(0,numparts, otp, js_bnd);
 
 
@@ -1661,7 +1739,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 	    for(int js_i=0; js_i<ND; js_i++) JSGetBoundary(js_i, 0, numparts, js_bnd[js_i], otp);
 
             if (treetype == TOMP) root=BuildNodes_TOMP(0,numparts, otp, js_bnd);
-	    else if (treetype == TPHYSF) root=BuildNodes_TPHYSF(0, numparts, otp, js_bnd);
+	    else if (treetype == TPHYSF || treetype == TPHS) root=BuildNodes_TPHYSF(0, numparts, otp, js_bnd);
 	    else root = BuildNodes(0, numparts, otp, js_bnd);
 
             if (ibuildinparallel) BuildNodeIDs();
