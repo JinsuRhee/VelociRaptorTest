@@ -175,6 +175,7 @@ namespace NBody
         Node* BuildNodes(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
         Node* BuildNodes_TOMP(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
         Node* BuildNodes_TPHYSF(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_TPHYSF2(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2], Double_t *param);
 	Node* BuildNodes_JS(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
         //set node ids
         void BuildNodeIDs();
@@ -216,6 +217,14 @@ namespace NBody
         );
 	///Creates tree for OMP domain (including linkinglength)
         KDTree(Double_t js_rdist, Particle *p, Int_t numparts,
+            Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
+            int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
+            Double_t *Period=NULL, Double_t **metric=NULL,
+            bool iBuildInParallel = true,
+            bool iKeepInputOrder = false
+        );
+	///Creates tree for SearchSubset (including linkinglength)
+        KDTree(Double_t js_rdist, Double_t *params, Particle *p, Int_t numparts,
             Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
             int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
             Double_t *Period=NULL, Double_t **metric=NULL,
@@ -456,6 +465,7 @@ namespace NBody
                                   Double_t disfunc(Int_t , Double_t *), Int_t npc, Int_t *npca, Int_t &numgroups, Int_t minnum=8);
                                   */
         Int_t *FOFCriterion(FOFcompfunc p, Double_t *params, Int_t &numgroups, Int_t minnum=8, int order=0, int ipcheckflag=0, FOFcheckfunc check=Pnocheck, Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL);
+        Int_t *FOFCriterion_JS(FOFcompfunc p, Double_t *params, Int_t &numgroups, Int_t minnum=8, int order=0, int ipcheckflag=0, FOFcheckfunc check=Pnocheck, Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL);
         ///Link partiles based on criterion and also only allow specific particles to be used as a basis for links using FOFcheckfunc
         Int_t* FOFCriterionSetBasisForLinks(FOFcompfunc cmp, Double_t *params, Int_t &numgroup, Int_t minnum=8, int order=0, int ipcheckflag=0, FOFcheckfunc check=Pnocheck, Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL);
         //Int_t FOFCriterionParticle(FOFcompfunc p, Int_t *pfof, Int_t target, Int_t iGroup, Double_t *params);

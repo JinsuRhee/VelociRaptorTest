@@ -925,48 +925,9 @@ TEEEST:
 		bool irearrangeandbalance=true;
 		if (ikeepinputorder) irearrangeandbalance=false;
 
-		//double js_dx = 0;
-		//int js_ii, js_crit=-1;
-		//double js_dx2;
-		//int js_nn = (end - start) / 8;
+		k = start + (size - 1) / 2;
+		splitdim = DetermineSplitDim(start, end, js_bnd, otp);
 
-		//for(int js_i=0; js_i<ND; js_i++){
-		//    js_ii=js_i;
-		//    js_qsort(js_ind0, js_ind1, js_ii);
-		//    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
-	    	//	    js_dx2 = bucket[js_ind+1].GetPhase(js_i) - bucket[js_ind].GetPhase(js_i);
-    		//	    js_dx2 = abs(js_dx2);
-		//	    if(js_dx2 > js_dx){
-		//		    js_dx = js_dx2;
-		//		    if(js_dx > 1.0*js_rdist){
-		//			    k = js_ind;
-		//			    splitdim = js_i;
-		//			    splitvalue = bucket[k].GetPhase(splitdim);//(bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
-		//			    js_crit = 1;
-		//			    break;
-		//		    }
-		//    	    }
-	    	//    }
-		//    if(js_crit>0) break;
-		//}
-
-		//if(js_crit<0){
-	    // Balanced Tree
-		    //bool irearrangeandbalance=true;
-		    //if (ikeepinputorder) irearrangeandbalance=false;
-
-		//for(int js_iii=0; js_iii<ND; js_iii++){
-		//	if(js_bnd[js_iii][1] - js_bnd[js_iii][0] < js_rdist){
-		//		break;
-		//	}
-		//	if(js_iii == ND - 1) goto TEEEST;
-		//}
-		    k = start + (size - 1) / 2;
-		    splitdim = DetermineSplitDim(start, end, js_bnd, otp);
-		//    splitvalue = (this->*medianfunc)(splitdim, k, start, end, otp, irearrangeandbalance);
-		//}
-		//
-		//
 		js_qsort(js_ind0, js_ind1, splitdim);
 		double js_dx2, js_dx=0;
 		int js_nn = (end - start) / 8;
@@ -977,7 +938,7 @@ TEEEST:
 			    if(js_dx2 > js_dx){
 				    js_dx = js_dx2;
 				    k = js_ind;
-				    splitvalue = bucket[k].GetPhase(splitdim);//(bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
+				    splitvalue = bucket[k].GetPhase(splitdim);
 		    	    }
 	    	    }
 
@@ -1146,6 +1107,280 @@ TEEEST:
 	    //    left, right);
         }
     }
+
+
+    Node *KDTree::BuildNodes_TPHYSF2(Int_t start, Int_t end, KDTreeOMPThreadPool &otp, Double_t js_bnd[6][2], Double_t *param)
+    {
+        Int_t size = end - start, k;
+        Int_tree_t id = 0;
+	Int_t js_ompval=-1;
+	int splitdim;
+	Double_t js_time0, splitvalue;
+	js_time0 = (clock() /( (double)CLOCKS_PER_SEC));
+	int js_ind0 = start;
+	int js_ind1 = end-1;
+	int js_skip = -1;
+
+        //if not building in parallel can set ids here and update number of nodes
+        //otherwise, must set after construction
+        if (ibuildinparallel == false) {
+            id = numnodes;
+            numnodes++;
+        }
+
+	if(b2<0) b2=b;
+
+	// Normal Construction
+        if (size <= b2)
+        {
+            if (ibuildinparallel == false) numleafnodes++;
+TEEEST:
+	    // -----
+	    LeafNode *js_LN;
+	    js_LN = new LeafNode(id, start, end, js_bnd, ND);
+	    Int_t js_leafval=1;
+	    js_LN->SetLeaf(js_leafval);
+
+	    return js_LN;
+            //return new LeafNode(id ,start, end,  js_bnd, ND);
+        }
+	else
+	{
+		bool irearrangeandbalance=true;
+		if (ikeepinputorder) irearrangeandbalance=false;
+
+		k = start + (size - 1) / 2;
+		splitdim = DetermineSplitDim(start, end, js_bnd, otp);
+
+		js_qsort(js_ind0, js_ind1, splitdim);
+		double js_dx2, js_dx=0;
+		int js_nn = (end - start) / 8;
+
+		for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
+	    	        js_dx2 = bucket[js_ind+1].GetPhase(splitdim) - bucket[js_ind].GetPhase(splitdim);
+    		        js_dx2 = abs(js_dx2);
+		        if(js_dx2 > js_dx){
+		    	    js_dx = js_dx2;
+		    	    k = js_ind;
+		    	    splitvalue = bucket[k].GetPhase(splitdim);
+			    }
+	    	}
+
+
+
+	}
+
+	//Now Split Nodes
+        //run the node construction in parallel
+        if (ibuildinparallel && otp.nactivethreads > 1) {
+            //note that if OpenMP not defined then ibuildinparallel is false
+#ifdef USEOPENMP
+            vector<KDTreeOMPThreadPool> newotp = OMPSplitThreadPool(otp);
+            Node *left, *right;
+	    Double_t js_bdnL[6][2], js_bdnR[6][2];
+
+	    for(int js_ind=0; js_ind<ND; js_ind++){
+	    	js_bdnL[js_ind][0] = js_bnd[js_ind][0];
+	    	js_bdnR[js_ind][0] = js_bnd[js_ind][0];
+	    	js_bdnL[js_ind][1] = js_bnd[js_ind][1];
+	    	js_bdnR[js_ind][1] = js_bnd[js_ind][1];
+
+	    	if(js_ind == splitdim){
+	    		js_bdnL[js_ind][1] = splitvalue;
+	    		js_bdnR[js_ind][0] = splitvalue;
+	    	}
+	    }
+
+            #pragma omp parallel default(shared) num_threads(2)
+            #pragma omp single
+            {
+                #pragma omp task
+                left = BuildNodes_TPHYSF2(start, k+1, newotp[0], js_bdnL, param);
+                #pragma omp task
+                right = BuildNodes_TPHYSF2(k+1, end, newotp[1], js_bdnR, param);
+                #pragma omp taskwait
+            }
+
+	    left->SetLorR(-1);
+	    right->SetLorR(1);
+
+	    SplitNode* js_SP;
+	    js_SP = new SplitNode(id, splitdim, splitvalue, size, js_bnd, start, end, ND, left, right);
+	    left->SetParent((Node*)js_SP);
+	    right->SetParent((Node*)js_SP);
+
+            ///// Save the largest distance
+            // left
+            Double_t js_center[6], js_centertmp, js_pos[3], js_vel[3];
+	    Double_t js_cenPos[3], js_cenVel[3];
+            Double_t js_dd=-1, js_dd2;
+            for(int js_j=0; js_j<3; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=start; js_i<k+1; js_i++){
+                            js_centertmp += bucket[js_i].GetPosition(js_j);
+                    }    
+                    js_center[js_j] = js_centertmp / (k+1 - start);
+            }    
+            for(int js_j=3; js_j<6; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=start; js_i<k+1; js_i++){
+                            js_centertmp += bucket[js_i].GetVelocity(js_j-3);
+                    }    
+                    js_center[js_j] = js_centertmp / (k+1 - start);
+            }    
+            for(int js_i=0; js_i<6; js_i++) left->SetCenter(js_center[js_i],js_i);
+	    for(int js_i=0; js_i<3; js_i++) js_cenPos[js_i] = js_center[js_i];
+	    for(int js_i=3; js_i<6; js_i++) js_cenVel[js_i-3] = js_center[js_i];
+
+            for(int js_i=start; js_i<k+1; js_i++){
+		    js_dd2 = 0.;
+                    for(int js_j=0; js_j<3; js_j++) js_pos[js_j] = bucket[js_i].GetPosition(js_j);
+                    for(int js_j=3; js_j<6; js_j++) js_vel[js_j-3] = bucket[js_i].GetVelocity(js_j-3);
+                    js_dd2 += DistanceSqd(js_pos, js_cenPos, 3)/param[6]; 
+                    js_dd2 += DistanceSqd(js_vel, js_cenVel, 3)/param[7]; 
+                    if(js_dd2 > js_dd) {
+                            js_dd = js_dd2;
+                    }    
+            }    
+            left->SetFarthest(js_dd);
+
+            // right
+            js_dd=-1;
+            for(int js_j=0; js_j<6; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=k+1; js_i<end; js_i++){
+                            js_centertmp += bucket[js_i].GetPosition(js_j);
+                    }    
+                    js_center[js_j] = js_centertmp / (end - (k+1));
+            }    
+            for(int js_j=3; js_j<6; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=start; js_i<k+1; js_i++){
+                            js_centertmp += bucket[js_i].GetVelocity(js_j-3);
+                    }    
+                    js_center[js_j] = js_centertmp / (k+1 - start);
+            }    
+            for(int js_i=0; js_i<6; js_i++) right->SetCenter(js_center[js_i],js_i);
+	    for(int js_i=0; js_i<3; js_i++) js_cenPos[js_i] = js_center[js_i];
+	    for(int js_i=3; js_i<6; js_i++) js_cenVel[js_i-3] = js_center[js_i];
+
+            for(int js_i=k+1; js_i<end; js_i++){
+		    js_dd2 = 0.;
+                    for(int js_j=0; js_j<3; js_j++) js_pos[js_j] = bucket[js_i].GetPosition(js_j);
+                    for(int js_j=3; js_j<6; js_j++) js_vel[js_j-3] = bucket[js_i].GetVelocity(js_j-3);
+                    js_dd2 = DistanceSqd(js_pos, js_cenPos, 3)/param[6]; 
+                    js_dd2 = DistanceSqd(js_vel, js_cenVel, 3)/param[7]; 
+                    if(js_dd2 > js_dd) {
+                            js_dd = js_dd2;
+                    }    
+            }    
+            right->SetFarthest(js_dd);
+	    //////
+	    
+	    return js_SP;
+            //return new SplitNode(id, splitdim, splitvalue, size, js_bnd, start, end, ND,
+            //    left, right);
+#endif
+        }
+        else {
+	    Node *left, *right;
+	    Double_t js_bdnL[6][2], js_bdnR[6][2];
+
+	    for(int js_ind=0; js_ind<ND; js_ind++){
+	    	js_bdnL[js_ind][0] = js_bnd[js_ind][0];
+	    	js_bdnR[js_ind][0] = js_bnd[js_ind][0];
+	    	js_bdnL[js_ind][1] = js_bnd[js_ind][1];
+	    	js_bdnR[js_ind][1] = js_bnd[js_ind][1];
+
+	    	if(js_ind == splitdim){
+	    		js_bdnL[js_ind][1] = splitvalue;
+	    		js_bdnR[js_ind][0] = splitvalue;
+	    	}
+	    }
+
+	    left = BuildNodes_TPHYSF2(start, k+1, otp, js_bdnL, param);
+	    right = BuildNodes_TPHYSF2(k+1, end, otp, js_bdnR, param);
+
+	    left->SetLorR(-1);
+	    right->SetLorR(1);
+
+	    SplitNode* js_SP;
+	    js_SP = new SplitNode(id, splitdim, splitvalue, size, js_bnd, start, end, ND, left, right);
+	    left->SetParent((Node*)js_SP);
+	    right->SetParent((Node*)js_SP);
+
+            ///// Save the largest distance
+            // left
+            Double_t js_center[6], js_centertmp, js_pos[3], js_vel[3];
+	    Double_t js_cenPos[3], js_cenVel[3];
+            Double_t js_dd=-1, js_dd2;
+            for(int js_j=0; js_j<6; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=start; js_i<k+1; js_i++){
+                            js_centertmp += bucket[js_i].GetPosition(js_j);
+                    }    
+                    js_center[js_j] = js_centertmp / (k+1 - start);
+            }    
+            for(int js_j=3; js_j<6; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=start; js_i<k+1; js_i++){
+                            js_centertmp += bucket[js_i].GetVelocity(js_j-3);
+                    }    
+                    js_center[js_j] = js_centertmp / (k+1 - start);
+            }    
+            for(int js_i=0; js_i<6; js_i++) left->SetCenter(js_center[js_i],js_i);
+	    for(int js_i=0; js_i<3; js_i++) js_cenPos[js_i] = js_center[js_i];
+	    for(int js_i=3; js_i<6; js_i++) js_cenVel[js_i-3] = js_center[js_i];
+
+            for(int js_i=start; js_i<k+1; js_i++){
+		    js_dd2 = 0.;
+                    for(int js_j=0; js_j<3; js_j++) js_pos[js_j] = bucket[js_i].GetPosition(js_j);
+                    for(int js_j=3; js_j<6; js_j++) js_vel[js_j] = bucket[js_i].GetVelocity(js_j-3);
+                    js_dd2 += DistanceSqd(js_pos, js_cenPos, 3)/param[6];
+		    js_dd2 += DistanceSqd(js_vel, js_cenVel, 3)/param[7]; 
+                    if(js_dd2 > js_dd) {
+                            js_dd = js_dd2;
+                    }    
+            }    
+            left->SetFarthest(js_dd);
+
+            // right
+            js_dd=-1;
+            for(int js_j=0; js_j<6; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=k+1; js_i<end; js_i++){
+                            js_centertmp += bucket[js_i].GetPosition(js_j);
+                    }    
+                    js_center[js_j] = js_centertmp / (end - (k+1));
+            }    
+            for(int js_j=3; js_j<6; js_j++){
+		    js_centertmp=0.;
+                    for(int js_i=start; js_i<k+1; js_i++){
+                            js_centertmp += bucket[js_i].GetVelocity(js_j-3);
+                    }    
+                    js_center[js_j] = js_centertmp / (k+1 - start);
+            }    
+            for(int js_i=0; js_i<6; js_i++) right->SetCenter(js_center[js_i],js_i);
+	    for(int js_i=0; js_i<3; js_i++) js_cenPos[js_i] = js_center[js_i];
+	    for(int js_i=3; js_i<6; js_i++) js_cenVel[js_i-3] = js_center[js_i];
+
+            for(int js_i=k+1; js_i<end; js_i++){
+		    js_dd2 = 0.;
+                    for(int js_j=0; js_j<3; js_j++) js_pos[js_j] = bucket[js_i].GetPosition(js_j);
+                    for(int js_j=3; js_j<6; js_j++) js_vel[js_j] = bucket[js_i].GetVelocity(js_j-3);
+                    js_dd2 += DistanceSqd(js_pos, js_cenPos, 3)/param[6];
+		    js_dd2 += DistanceSqd(js_vel, js_cenVel, 3)/param[7]; 
+                    if(js_dd2 > js_dd) {
+                            js_dd = js_dd2;
+                    }    
+            }    
+            right->SetFarthest(js_dd);
+	    //////
+	    return js_SP;
+            //return new SplitNode(id, splitdim, splitvalue, size, js_bnd, start, end, ND,
+	    //    left, right);
+        }
+    }
     Node *KDTree::BuildNodes_TOMP(Int_t start, Int_t end, KDTreeOMPThreadPool &otp, Double_t js_bnd[6][2])
     {
         Int_t size = end - start, k;
@@ -1180,7 +1415,7 @@ TEEEST:
 					    js_dx = js_dx2;
 				    }
 			    }
-			    if(js_dx > 1.0*js_rdist){
+			    if(js_dx > 2.0*js_rdist){
 				    js_ompskip=-1;
 				    break;
 			    }
@@ -1212,22 +1447,44 @@ TEEEST:
 		double js_dx2;
 		int js_nn = (end - start) / 8;
 
-		for(int js_i=0; js_i<ND; js_i++){
-		    js_qsort(start, end-1, js_i);
-		    js_dx=0;
-		    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
-		        js_dx2 = bucket[js_ind+1].GetPhase(js_i) - bucket[js_ind].GetPhase(js_i);
-		        js_dx2 = abs(js_dx2);
-		        if(js_dx2 > js_dx){
-		    	    js_dx = js_dx2;
-		    	    k = js_ind;
-		    	    splitdim = js_i;
-		    	    //splitvalue = (bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
-		    	    splitvalue = bucket[k].GetPhase(splitdim);
-		        }
-	    	    }
-		    if(js_dx>1.0*js_rdist) break;
+		///
+		splitdim = DetermineSplitDim(start, end, js_bnd, otp);
+		js_qsort(start, end-1, splitdim);
+		js_dx = 0.;
+		k = -1;
+		for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
+			js_dx2 = bucket[js_ind+1].GetPhase(splitdim) - bucket[js_ind].GetPhase(splitdim);
+			js_dx2 = abs(js_dx2);
+			if(js_dx2 > js_dx){
+				js_dx = js_dx2;
+				//if(js_dx > 2.0*js_rdist){
+					k = js_ind;
+					splitvalue = bucket[k].GetPhase(splitdim);
+				//}
+			}
 		}
+
+		//int splitdim_old = splitdim;
+		/////
+		//if(k < 0){
+		//	for(int js_i=0; js_i<ND; js_i++){
+		//	    if(js_i == splitdim_old) continue;
+		//	    js_qsort(start, end-1, js_i);
+		//	    js_dx=0;
+		//	    for(int js_ind=start + js_nn; js_ind<end - js_nn; js_ind++){
+		//	        js_dx2 = bucket[js_ind+1].GetPhase(js_i) - bucket[js_ind].GetPhase(js_i);
+		//	        js_dx2 = abs(js_dx2);
+		//	        if(js_dx2 > js_dx){
+		//	    	    js_dx = js_dx2;
+		//	    	    k = js_ind;
+		//	    	    splitdim = js_i;
+		//	    	    //splitvalue = (bucket[k].GetPhase(splitdim) + bucket[k+1].GetPhase(splitdim))/2.0;
+		//	    	    splitvalue = bucket[k].GetPhase(splitdim);
+		//	        }
+	    	//	    }
+		//	    if(js_dx>2.0*js_rdist) break;
+		//	}
+		//}
 	}
 
 	//Now Split Nodes
@@ -1754,6 +2011,73 @@ TEEEST:
 #endif
     }
 
+    // For SearchSubset Build
+    KDTree::KDTree(Double_t rdist, Double_t *param, Particle *p, Int_t nparts, Int_t bucket_size,
+      int ttype, int smfunctype, int smres,
+      int criterion, int aniso, int scale,
+      Double_t *Period, Double_t **m,
+      bool iBuildInParallel,
+      bool iKeepInputOrder)
+    {
+        iresetorder=true;
+        ikeepinputorder = iKeepInputOrder;
+        ibuildinparallel = false;
+#ifdef USEOPENMP
+        ibuildinparallel = iBuildInParallel;
+        bool inested = omp_get_nested();
+        int nthreads;
+        #pragma omp parallel
+        #pragma omp single
+        {
+            nthreads = omp_get_num_threads();
+        }
+        if (nthreads == 1) ibuildinparallel = false;
+        if (inested == false) omp_set_nested(int(ibuildinparallel));
+#endif
+        numparts = nparts;
+        numleafnodes=numnodes=0;
+        bucket = p;
+        b = bucket_size;
+        treetype = ttype;
+        kernfunctype = smfunctype;
+        kernres = smres;
+        splittingcriterion = criterion;
+        anisotropic=aniso;
+        scalespace = scale;
+        metric = m;
+	js_rdist = rdist;
+        if (Period!=NULL)
+        {
+            period=new Double_t[3];
+            for (int k=0;k<3;k++) period[k]=Period[k];
+        }
+        else period=NULL;
+        if (TreeTypeCheck()) {
+            KernelConstruction();
+            for (Int_t i = 0; i < numparts; i++) bucket[i].SetID(i);
+            vol=1.0;ivol=1.0;
+            for (int j=0;j<ND;j++) {xvar[j]=1.0;ixvar[j]=1.0;}
+            if (scalespace) ScaleSpace();
+            for (int j=0;j<ND;j++) {vol*=xvar[j];ivol*=ixvar[j];}
+            if (splittingcriterion==1) for (int j=0;j<ND;j++) nientropy[j]=new Double_t[numparts];
+            KDTreeOMPThreadPool otp = OMPInitThreadPool();
+
+	    Double_t js_bnd[6][2];
+	    for(int js_i=0; js_i<ND; js_i++) JSGetBoundary(js_i, 0, numparts, js_bnd[js_i], otp);
+
+	    root=BuildNodes_TPHYSF2(0, numparts, otp, js_bnd, param);
+
+            if (ibuildinparallel) BuildNodeIDs();
+
+	    //if(treetype==TPHYSF)BuildNodeMask(root, rdist);
+	    //if(treetype!=TOMP)BuildSibling(root);
+            //else if (treetype==TMETRIC) root = BuildNodesDim(0, numparts,metric);
+            if (splittingcriterion==1) for (int j=0;j<ND;j++) delete[] nientropy[j];
+        }
+#ifdef USEOPENMP
+        omp_set_nested(inested);
+#endif
+    }
     //SysTem
     KDTree::KDTree(System &s, Int_t bucket_size,
       int ttype, int smfunctype, int smres, int criterion, int aniso, int scale,
