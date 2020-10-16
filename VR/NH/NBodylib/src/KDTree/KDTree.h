@@ -73,8 +73,11 @@ namespace NBody
         /// \name Public variables that specify treetype
         /// 0 is physical tree, 1 is projected physical, 2 is velocity, 3 is full phase-space, 4 is a sub-space of the full space specified by a metric
         /// ie: TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4
+	/// --JS--
+	/// 5 is physical adaptive tree
+	/// 6 is adaptive tree for building OMP domains
         //@{
-        const static int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4,TPHYSF=5,TOMP=6;
+        const static int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4;//,TPHYSA=5,TPHSA=6,TOMP=7;
         //@}
 
         /// \name Public variables that specify kernaltype
@@ -106,6 +109,7 @@ namespace NBody
 	Int_t b2=-1, b3=0;
 	///Tomake additional omp regions
 	Double_t js_rdist;
+	Int_t js_adt;
         ///max number of dimensions of tree
         const static int MAXND=6;
 	///
@@ -172,10 +176,16 @@ namespace NBody
         /// Private methods used in constructing the tree
         //@{
         ///uses prviate function pointers to recursive build the tree
+	//--JS--
+	// BuildNodes 		-> Usual Building with tagging the farthest distance
+	// BuildNodes_OMP	-> For building OMP Tree
+	// BuildNodes_ADT	-> Physical Adaptive Building
+	// BuildNodes_CRIT	-> Building Adaptive for FOFCriterion
+	// 
         Node* BuildNodes(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
-        Node* BuildNodes_TOMP(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
-        Node* BuildNodes_TPHYSF(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
-        Node* BuildNodes_TPHYSF2(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2], Double_t *param);
+        Node* BuildNodes_OMP(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_ADT(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_CRIT(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2], Double_t *param);
 	Node* BuildNodes_JS(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
         //set node ids
         void BuildNodeIDs();
@@ -201,7 +211,16 @@ namespace NBody
         /// \name Constructors/Destructors
         //@{
         ///Creates tree from an NBody::Particle array
+	// Normal one
         KDTree(Particle *p, Int_t numparts,
+            Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
+            int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
+            Double_t *Period=NULL, Double_t **metric=NULL,
+            bool iBuildInParallel = true,
+            bool iKeepInputOrder = false
+        );
+	// Adaptive KDTree
+        KDTree(Int_t js_adt, Particle *p, Int_t numparts,
             Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
             int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
             Double_t *Period=NULL, Double_t **metric=NULL,
@@ -215,7 +234,7 @@ namespace NBody
             bool iBuildInParallel = true,
             bool iKeepInputOrder = false
         );
-	///Creates tree for OMP domain (including linkinglength)
+	///Creates OMP Domain
         KDTree(Double_t js_rdist, Particle *p, Int_t numparts,
             Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
             int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
