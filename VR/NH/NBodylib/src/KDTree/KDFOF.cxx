@@ -490,89 +490,6 @@ namespace NBody
                 if (iHead==numparts) iHead=0;
 
 		jinsu ++;
-		// -- JS --
-		//// Begin Ball Search. This routine is based on a bottom-up structure finding
-
-		//js_lp = NULL; js_prev = NULL; js_next = NULL;
-
-		//js_lp=(LeafNode*)FindLeafNode(iid);
-
-		//// Setting Linking length Area
-		//js_volume = 1.;
-		//for(int js_i=0; js_i<ND; js_i++){
-		//	js_linkbdn[js_i][0] = max(bucket[iid].GetPhase(js_i) - sqrt(fdist2), js_rootbdn[js_i][0]) + 1e-8;
-		//	js_linkbdn[js_i][1] = min(bucket[iid].GetPhase(js_i) + sqrt(fdist2), js_rootbdn[js_i][1]) - 1e-8;
-
-		//	js_volume = js_volume * (js_linkbdn[js_i][1] - js_linkbdn[js_i][0]);
-		//}
-		//// Initial Search
-                //for (int j = 0; j < 3; j++) off[j] = 0.0;
-                //if (period==NULL) js_lp->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-                //else js_lp->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-
-
-		//for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_lp->GetBoundary(js_i, js_j);
-
-		//// If Leap node encloses the linking-length sphere
-		//js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//if(js_volumetmp>0.0) js_volume = js_volume - js_volumetmp;
-
-
-		//// Initial Leaf Nodes on both sides
-		//js_prev = (Node *)js_lp->GetPrev();
-		//js_next = (Node *)js_lp->GetNext();
-
-		//// 4 node mode
-		//Node *js_prev2, *js_next2;
-		//js_next2 = js_next;
-		//for(int js_i=0; js_i<numleafnodes/2; js_i++){
-		//	js_next2 = js_next2->GetNext();
-		//}
-		//js_prev2 = js_next2->GetPrev();
-
-
-		//// Now Search
-		//while(js_volume > 0.){
-		//	// Prev
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_prev->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_prev)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_prev)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_prev = js_prev->GetPrev();
-
-		//	// Next
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_next->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_next)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_next)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_next = js_next->GetNext();
-
-		//	// Prev2
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_prev2->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_prev2)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_prev2)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_prev2 = js_prev2->GetPrev();
-		//	
-		//	// Next2
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_next2->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_next2)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_next2)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_next2 = js_next2->GetNext();
-		//}
 
                 //now begin Ball search. This node routine finds all particles
                 //within a distance fdist2, marks all particles using their IDS and pGroup array
@@ -585,13 +502,6 @@ namespace NBody
 
 
             }
-	    time11 = (clock() /( (double)CLOCKS_PER_SEC));
-	    if(time11 - time10 > js_time0){
-		    js_gind = iGroup;
-		    js_gptcl = pLen[iGroup];
-		    js_time0 = time11 - time10;
-		    js_visit = jinsu;
-	    }
 
             if(pLen[iGroup]<minnum){
                 Int_t ii=pHead[pGroupHead[iGroup]];
@@ -719,7 +629,11 @@ namespace NBody
             }
             //determine biggest group
             else if (maxlen<pLen[iGroup]){maxlen=pLen[iGroup];}
+
+	    //if(numparts==458) if(pLen[iGroup]==130) if(pGroup[id]==iGroup) for(int js_i=0; js_i<numparts; js_i++) if(pGroup[bucket[js_i].GetID()]==iGroup) cout<<"%		"<<i<<" / "<<bucket[i].GetID()<<" / "<<iGroup<<" / "<<js_i<<" / "<<bucket[js_i].GetID()<<endl;
         }
+
+	//if(numparts==458) for(Int_t i=1; i<=iGroup; i++) cout<<"		"<<i<<" / "<<pLen[i]<<endl;
 
         //for all groups that were too small reset id to 0
         for (Int_t i=0;i<numparts;i++) if(pGroup[bucket[i].GetID()]==-1)pGroup[bucket[i].GetID()]=0;
@@ -740,6 +654,7 @@ namespace NBody
                 for (Int_t i=1;i<=iGroup;i++) {pList[i]=new Int_t[pLen[i]];pCount[i]=0;}
                 for (Int_t i=0;i<numparts;i++) {
                     Int_t gid=pGroup[bucket[i].GetID()];
+		    //if (numparts==458) if (gid>0) cout<<"		"<<i<<" / "<<numparts<<" / "<<gid<<" / "<<pCount[gid]+1<<" / "<<endl;
                     if (gid>0) pList[gid][pCount[gid]++]=i;
 
                 }
@@ -747,10 +662,18 @@ namespace NBody
                 PriorityQueue *pq=new PriorityQueue(iGroup);
                 for (Int_t i = 1; i <=iGroup; i++) pq->Push(i, pLen[i]);
                 maxlen=pq->TopPriority();
+		//if(numparts==458) cout<<"%123123	Finish loop 8"<<" / "<<iGroup<<" / "<<minnum<<endl;
                 for (Int_t i = 1;i<=iGroup; i++) {
+			//if(numparts==458) cout<<"%123123	Finish loop 8A - "<<i<<" / "<<iGroup<<endl;
                     Int_t groupid=pq->TopQueue();
+			//if(numparts==458) cout<<"%123123	Finish loop 8B - "<<i<<" / "<<iGroup<<" / "<<groupid<<endl;
                     pq->Pop();
-                    for (Int_t j=0;j<pLen[groupid];j++) pGroup[bucket[pList[groupid][j]].GetID()]=i;
+			//if(numparts==458) cout<<"%123123	Finish loop 8C - "<<i<<" / "<<iGroup<<endl;
+			//if(numparts==458) cout<<"%123123	Finish loop 8C - "<<i<<" / "<<pLen[groupid]<<" / "<<endl;
+                    for (Int_t j=0;j<pLen[groupid];j++){
+			    //if(numparts==458) cout<<"		"<<j<<" / "<<pLen[groupid]<<" / "<<pList[groupid][j]<<" / "<<bucket[pList[groupid][j]].GetID()<<endl;
+			    pGroup[bucket[pList[groupid][j]].GetID()]=i;
+		    }
                     delete[] pList[groupid];
                 }
                 delete[] pList;
