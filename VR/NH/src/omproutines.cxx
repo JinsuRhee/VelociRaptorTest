@@ -51,20 +51,9 @@ KDTree **OpenMPBuildLocalTrees(Options &opt, const Int_t numompregions, vector<P
     {
     #pragma omp for schedule(dynamic,1) nowait
     for (i=0;i<numompregions;i++) {
-	    js_bsize = opt.Bsize;
+	js_bsize = opt.Bsize;
 
-	    tree3dfofomp[i] = new KDTree(&Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,js_bsize,tree3dfofomp[i]->TPHYSF,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
-	    while(1){
-	           if(tree3dfofomp[i]->GetNumLeafNodes() < opt.MaxLeafNodes){
-			   if(tree3dfofomp[i]->GetNumLeafNodes() > opt.MinLeafNodes) break;
-			   if(tree3dfofomp[i]->GetNumLeafNodes() < opt.MinLeafNodes && ompdomain[i].ncount < 1000000) break;
-		   }
-	           if(tree3dfofomp[i]->GetNumLeafNodes() > opt.MaxLeafNodes) js_bsize = js_bsize * 2;
-		   if(ompdomain[i].ncount > 1000000 && tree3dfofomp[i]->GetNumLeafNodes() < opt.MinLeafNodes) js_bsize = js_bsize / 2;
-	           tree3dfofomp[i] = new KDTree(&Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,js_bsize,tree3dfofomp[i]->TPHYSF,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
-	    }
-
-        //tree3dfofomp[i] = new KDTree(&Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYSF,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
+	tree3dfofomp[i] = new KDTree(js_bsize, &Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,js_bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
         tree3dfofomp[i]->OverWriteInputOrder();
     }
     }
