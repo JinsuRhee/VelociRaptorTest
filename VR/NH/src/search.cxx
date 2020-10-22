@@ -624,7 +624,7 @@ private(i,vscale2,mtotregion,vx,vy,vz,vmean)
     ngomp=new Int_t[iend+1];
     for (i=0;i<=iend;i++) {pfofomp[i]=NULL;ngomp[i]=0;}
     Double_t xscaling, vscaling;
-    double js_time;
+    double js_time, js_time2;
     Int_t js_npart;
     int js_bsize, js_nstep=0;
     //run search if 3DFOF found
@@ -632,7 +632,7 @@ private(i,vscale2,mtotregion,vx,vy,vz,vmean)
     {
 #ifdef USEOPENMP
 #pragma omp parallel default(shared) \
-private(i,tid,xscaling,vscaling,js_time,js_bsize,js_npart)
+private(i,tid,xscaling,vscaling,js_time,js_bsize,js_npart,js_time2)
 {
 #pragma omp for schedule(dynamic,1) nowait
 #endif
@@ -654,11 +654,13 @@ private(i,tid,xscaling,vscaling,js_time,js_bsize,js_npart)
             xscaling=1.0/xscaling;vscaling=1.0/vscaling;
 
 	    treeomp[tid]=new KDTree(js_npart, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize_sub,treeomp[tid]->TPHS,tree->KEPAN,100);
-	    
+	   
+	    js_time2 = MyGetTime();
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
 
 	    js_nstep++;
-	    if(MyGetTime() - js_time > 100.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<js_nstep<<" of "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<treeomp[tid]->GetNumLeafNodes()<<" / "<<ngomp[i]<<" / "<<MyGetTime() - js_time<<"    -     "<<endl;
+	    if(MyGetTime() - js_time > 100.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<js_nstep<<" of "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<treeomp[tid]->GetNumLeafNodes()<<" / "<<ngomp[i]<<" / "<<MyGetTime() - js_time<<" // FOF - "<<MyGetTime() - js_time2<<endl;
+
             delete treeomp[tid];
             for (Int_t j=0;j<numingroup[i];j++) {
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
@@ -1120,6 +1122,7 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
         //just build tree and initialize the pfof array
 	//cout<<"		Before Tree / "<<omp_get_thread_num()<<endl;
         //tree=new KDTree(0.0, param, Partsubset,nsubset,opt.Bsize_sub2,tree->TPHYS);
+	//cout<<"%123123 ParameterCheck	Params in making Tree : "<<param[1]<<" / "<<param[2]<<" / "<<param[6]<<" / "<<param[7]<<" / "<<endl;
         tree=new KDTree(0.0, param, Partsubset,nsubset,opt.Bsize_sub2,tree->TPHS);
 	//cout<<"		Tree Done / "<<omp_get_thread_num()<<endl;
         numgroups=0;
@@ -1129,7 +1132,8 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
     //@}
     //now actually search for dynamically distinct substructures
     //@{
-    if (!(opt.foftype==FOFSTPROBNN||opt.foftype==FOFSTPROBNNLX||opt.foftype==FOFSTPROBNNNODIST||opt.foftype==FOF6DCORE)) {
+    if (!(opt.foftype==FOFSTPROBNN||opt.foftype==FOFSTPROBNNLX||opt.foftype==FOFSTPROBNNNODIST||opt.foftype==FOF6DCORE)) 
+    {
         if (opt.iverbose>=2) cout<<"Building tree ... "<<endl;
         tree=new KDTree(Partsubset,nsubset,opt.Bsize_sub,tree->TPHYS);
         param[0]=tree->GetTreeType();
@@ -1409,6 +1413,7 @@ private(i,tid)
     }
     if (numgroups>0) if (opt.iverbose>=2) cout<<ThisTask<<": "<<numgroups<<" substructures found"<<endl;
     else {if (opt.iverbose>=2) cout<<ThisTask<<": "<<"NO SUBSTRUCTURES FOUND"<<endl;}
+
 
     //now search particle list for large compact substructures that are considered part of the background when using smaller grids
     if (nsubset>=MINSUBSIZE && opt.iLargerCellSearch && opt.foftype!=FOF6DCORE)
@@ -1702,7 +1707,18 @@ private(i,tid)
         for (i=0;i<nsubset;i++) Partsubset[i].SetType(-1);
         param[9]=0.5;
 
-        param[0]=tree->GetTreeType();
+	//--JS--
+	//
+	//In 6DCore case, making tree with using the new parameter sets
+	
+	if(opt.foftype==FOF6DCORE){
+		delete tree;
+        	tree=new KDTree(0.0, param, Partsubset,nsubset,opt.Bsize_sub2,tree->TPHS);
+        	//numgroups=0;
+        	//pfof=new Int_t[nsubset];
+        	//for (i=0;i<nsubset;i++) pfof[i]=0;
+        	param[0]=tree->GetTreeType();
+	}
 	//cout<<"		Before FOF / "<<tree->GetNumLeafNodes()<<endl;
         pfofbg=tree->FOFCriterion(fofcmp,param,numgroupsbg,minsize,iorder,icheck,FOFcheckbg);
 	//cout<<"		After FOF / "<<omp_get_thread_num()<<endl;
@@ -2990,7 +3006,6 @@ void SearchSubSub(Options &opt, const Int_t nsubset, vector<Particle> &Partsubse
             for (auto iomp=0;iomp<ompactivesubgroups.size();iomp++) {
 		    //if(iomp<500) continue;
 		js_time[0] = MyGetTime();
-		js_nstep ++;
 		tid = omp_get_thread_num();
 
                 Int_t i=ompactivesubgroups[iomp];
@@ -3013,7 +3028,7 @@ void SearchSubSub(Options &opt, const Int_t nsubset, vector<Particle> &Partsubse
                         subngroup[i], subsubnumingroup[i], subsubpglist[i], numcores[i],
                         subpglist[i], pfof, ngroup, ngroupidoffset_old[i]);
 		js_time[3] = MyGetTime();
-
+		js_nstep++;
 	    	if(js_time[3] - js_time[0] > 100.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<js_nstep<<" of "<<ompactivesubgroups.size()<<" // "<<subnumingroup[i]<<" // "<<subngroup[i]<<" // All: "<<js_time[3] - js_time[0]<<" /PRECAL: "<<js_time[1] - js_time[0]<<" /FOF: "<<js_time[2] - js_time[1]<<" /Clean: "<<js_time[3] - js_time[2]<<endl;
 		//cout<<"		ALLDONE / "<<omp_get_thread_num()<<endl;
                 delete[] subpfof;
