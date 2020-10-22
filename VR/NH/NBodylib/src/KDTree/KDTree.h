@@ -567,6 +567,8 @@ namespace NBody
         /// Determine the split dimension
         inline int DetermineSplitDim(Int_t start, Int_t end, Double_t bnd[6][2],
                 KDTreeOMPThreadPool &otp);
+        inline int DetermineSplitDim_POS(Int_t start, Int_t end, Double_t bnd[6][2],
+                KDTreeOMPThreadPool &otp);
         //@}
 
         /// \name Rearrange and balance the tree

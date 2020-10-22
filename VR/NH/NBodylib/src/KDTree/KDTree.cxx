@@ -590,6 +590,54 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
         return splitdim;
     }
 
+    inline int KDTree::DetermineSplitDim_POS(Int_t start, Int_t end, Double_t bnd[6][2],
+        KDTreeOMPThreadPool &otp) {
+        int splitdim=0;
+        Int_t size = end - start;
+        Int_t splitindex = start + (size - 1) / 2;
+        Double_t cursplitvalue;
+        Double_t nbins;
+        vector<Double_t> splitvalue(ND);
+        vector<Double_t> entropybins;
+
+        //if using shannon entropy criterion
+        if(splittingcriterion==1) {
+            if(end-start>8) nbins=ceil(pow((end-start),1./3.));
+            else nbins=2;
+            entropybins.resize(nbins);
+        }
+        for (auto j = 0; j < 3; j++)
+        {
+            if(splittingcriterion==1) {
+                splitvalue[j] = (this->*spreadfunc)(j, start, end, bnd[j], otp)+1e-32;//addition incase lattice and no spread
+                Double_t low, up;
+                low=bnd[j][0] - 2.0*(splitvalue[j])/(Double_t)(end-start);
+                up=bnd[j][1] + 2.0*(splitvalue[j])/(Double_t)(end-start);
+                splitvalue[j] = (this->*entropyfunc)(j, start, end, low, up, nbins, entropybins.data(), otp);
+            }
+            else if (splittingcriterion==2) {
+                splitvalue[j] = (this->*bmfunc)(j, start, end, bnd[j], otp);
+                splitvalue[j] = (this->*dispfunc)(j, start, end, splitvalue[j], otp);
+            }
+            else {
+                splitvalue[j] = (this->*spreadfunc)(j, start, end, bnd[j], otp);
+            }
+        }
+
+        splitdim=0;cursplitvalue = splitvalue[0];
+        //splitdim=0; maxspread=0.0; minentropy=1.0;enflag=0;
+        //for since entropy can only be used in cases where the subspace is not sparse or does not have lattice structure must check
+        //the question is how? At the moment, I do not check for this, though the idea would be only check dimensions that meet the criteria
+        //and if non of them meet it, then enflag still zero and perhaps, use most spread dimension
+        for (auto j = 1; j < 3; j++)
+        {
+            if (splitvalue[j]>cursplitvalue) {
+                splitdim = j;
+                cursplitvalue = splitvalue[j];
+            }
+        }
+        return splitdim;
+    }
     //-- End of inline functions
 
     //-- Private functions used to build tree
@@ -843,6 +891,7 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 
 		k = start + (size - 1) / 2;
 		splitdim = DetermineSplitDim(start, end, js_bnd, otp);
+		//splitdim = DetermineSplitDim_POS(start, end, js_bnd, otp);
 
 		js_qsort(js_ind0, js_ind1, splitdim);
 		double js_dx2, js_dx=0;
@@ -1062,7 +1111,19 @@ reduction(+:disp) num_threads(nthreads) if (nthreads>1)
 		if (ikeepinputorder) irearrangeandbalance=false;
 
 		k = start + (size - 1) / 2;
+
+		Double_t js_xc = 1.0/sqrt(param[1]);
+		Double_t js_vc = 1.0/sqrt(param[2]);
+
+		for(Int_t js_i=start; js_i<end; js_i++) bucket[js_i].ScalePhase(js_xc, js_vc);
 		splitdim = DetermineSplitDim(start, end, js_bnd, otp);
+
+		js_xc = 1.0/js_xc;
+		js_vc = 1.0/js_vc;
+		for(Int_t js_i=start; js_i<end; js_i++) bucket[js_i].ScalePhase(js_xc, js_vc);
+
+		//splitdim = DetermineSplitDim_POS(start, end, js_bnd, otp);
+
 
 		js_qsort(js_ind0, js_ind1, splitdim);
 		double js_dx2, js_dx=0;
