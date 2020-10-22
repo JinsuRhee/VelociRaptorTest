@@ -1081,6 +1081,8 @@ namespace NBody
 			off[cut_dim] = old_off;
 		    }
 		}
+
+		if(BucketFlag[left->GetID()]==1 && BucketFlag[right->GetID()]==1) BucketFlag[nid] = 1;
 	}
 	if (flag) BucketFlag[nid]=1;
     }
@@ -1141,6 +1143,7 @@ namespace NBody
         	else if ((int)params[0]==TPHS) invscaling = 1.0/(params[(cut_dim<3)*1+(cut_dim>=3)*2]);
         	else invscaling=1.0;
 
+		//invscaling = 1;
 		new_off = new_off * sqrt(invscaling);
 
         	if (new_off < 0)
@@ -1167,6 +1170,7 @@ namespace NBody
         	        off[cut_dim] = old_off;
         	    }
         	}
+		if(BucketFlag[left->GetID()]==1 && BucketFlag[right->GetID()]==1) BucketFlag[nid] = 1;
 	}
 	if (flag) BucketFlag[nid]=1;
 	///

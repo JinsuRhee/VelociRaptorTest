@@ -789,7 +789,6 @@ namespace NBody
 		        Tail[Head[target]]=Tail[Head[i]];
 		        Head[i]=Head[target];
 
-3007                 PreCalcSearchSubSet(opt2, su
 		        if(iTail==nActive)iTail=0;
 		        flag=0;
 		    }
