@@ -8,6 +8,91 @@
 
 namespace NBody
 {
+    void KDTree::FOF_js_SearchNode(Double_t js_search[6][2], vector<Int_t> &js_nodelist, Node* np, Particle *bucket, Double_t fdist2){
+	    if(np->GetLeaf()>0){
+		    Double_t js_pos[6], js_dist, js_center[6], js_bpos[6], js_rr;
+		    for(int js_i=0; js_i<ND; js_i++){
+			    js_pos[js_i] = (js_search[js_i][0] + js_search[js_i][1])/2;
+			    js_bpos[js_i] = bucket[np->GetStart()].GetPhase(js_i);
+			    js_center[js_i] = np->GetCenter(js_i);
+		    }
+		    js_dist = DistanceSqd(js_pos, js_center, ND);
+		    js_rr = DistanceSqd(js_bpos, js_center, ND);
+
+		    if(sqrt(js_dist) < sqrt(js_rr) + sqrt(fdist2)){
+			    js_nodelist.push_back(np->GetStart());
+			    js_nodelist.push_back(np->GetEnd());
+		    }
+	    }
+	    else{
+		    int k;
+		    SplitNode *sp;
+		    sp=(SplitNode *)np;
+		    k=sp->GetCutDim();
+		    if (js_search[k][1]<sp->GetCutValue()){
+		    	np = sp->GetLeft();
+			FOF_js_SearchNode(js_search, js_nodelist, np, bucket, fdist2);
+		    }
+		    else if (js_search[k][0]>sp->GetCutValue()){
+		    	np = sp->GetRight();
+			FOF_js_SearchNode(js_search, js_nodelist, np, bucket, fdist2);
+		    }
+		    else{
+		    	np = sp->GetLeft();
+			FOF_js_SearchNode(js_search, js_nodelist, np, bucket, fdist2);
+			np = sp->GetRight();
+			FOF_js_SearchNode(js_search, js_nodelist, np, bucket, fdist2);
+		    }
+	    }
+    }
+
+    void KDTree::FOF_js_AllSearch(vector<Int_t> js_nodelist, Int_t *js_Fifo, Double_t rd, Double_t fdist2, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target){
+
+	    Int_t js_NumNode = js_nodelist.size()/2;
+	    Int_t i, j, js_i0, js_i1, id;
+	    Double_t dist2;
+	    int js_thread = omp_get_max_threads();
+	    Int_t js_len=0;
+
+	    #pragma omp parallel for \
+	    default(shared) private(i, j, js_i0, js_i1, id, dist2) \
+	    schedule(dynamic,5) num_threads(js_thread) reduction(+:js_len)
+	    for(j = 0; j < js_NumNode; j++){
+		    js_i0 = js_nodelist[2*j];
+		    js_i1 = js_nodelist[2*j+1];
+
+		    for(i = js_i0; i < js_i1; i++){
+			    //if(flag!=Head[i])flag=0;
+			    id=bucket[i].GetID();
+			    if(Group[id]) continue;
+
+			    dist2 = DistanceSqd(bucket[target].GetPosition(),bucket[i].GetPosition());
+			    if (ND==6) dist2+=DistanceSqd(bucket[target].GetVelocity(),bucket[i].GetVelocity());
+			    if(dist2 < fdist2){
+				    Group[id]=iGroup;
+
+				    js_len ++;
+
+				    js_Fifo[i] = i;
+
+			    }
+		    }
+	    }
+	    if(js_len>0) Len[iGroup] += js_len;
+	    for(i=0; i<numparts; i++){
+		    if(js_Fifo[i]<0) continue;
+		    Fifo[iTail++]=i;
+		    Next[Tail[Head[target]]]=Head[i];
+		    Tail[Head[target]]=Tail[Head[i]];
+		    Head[i]=Head[target];
+		    if(iTail==nActive)iTail=0;
+		    js_Fifo[i] = -1;
+	    }
+
+	    //if (flag) BucketFlag[nid]=1;
+    }
+
+
     Double_t KDTree::JS_GetOverrapVolume(Double_t js_linkbdn[6][2], Double_t js_bdn[6][2]){
 	    Double_t js_volume=-1, js_dx[6][2];
 	    Int_t js_inside=0;
@@ -217,6 +302,12 @@ namespace NBody
 
 	double js_time0=-1., time10, time11;
 	int js_gind, js_gptcl, js_visit, jinsu;
+	vector<Int_t> js_nodelist;
+	Double_t js_search[6][2];
+	Int_t *js_Fifo;
+	js_Fifo = new Int_t[numparts];
+	for (Int_t i=0; i<numparts; i++) js_Fifo[i] = -1;
+
         for (Int_t i=0;i<numparts;i++){
 	    time10 = (clock() /( (double)CLOCKS_PER_SEC));
 	    jinsu = 0;
@@ -242,34 +333,19 @@ namespace NBody
 		jinsu ++;
 		
                 for (int j = 0; j < 3; j++) off[j] = 0.0;
-                //if (period==NULL) root->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-                //else root->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		
-		Node *js_lp, *js_lp2;
-		js_lp=(LeafNode*)FindLeafNode(iid);
-		js_lp->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag,Fifo,iTail,off,iid);
-		long unsigned int js_numlp=js_lp->GetNumNearLeaf();
-		if(js_numlp>=1){
-			for(int js_i=0; js_i<js_numlp; js_i++){
-				js_lp2 = (LeafNode*)js_lp->GetNearLeaf(js_i);
-				js_lp2->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag,Fifo,iTail,off,iid);
-				js_lp2=NULL;
-			}
-		}
-		js_lp=NULL;
+                if (period==NULL) root->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
+                else root->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
 
-		///
-		//FOFSearch_js(root, 0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag,Fifo,iTail,off,iid);
-
+		//js_nodelist.clear();
+		//Node* js_np=root;
+		//for(int js_i=0; js_i<ND; js_i++) js_search[js_i][0] = bucket[iid].GetPhase(js_i) - sqrt(fdist2);
+		//for(int js_i=0; js_i<ND; js_i++) js_search[js_i][1] = bucket[iid].GetPhase(js_i) + sqrt(fdist2);
+		//FOF_js_SearchNode(js_search, js_nodelist, js_np, bucket, fdist2);
+		//FOF_js_AllSearch(js_nodelist,js_Fifo,0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag,Fifo,iTail,off,iid);
 		///
             }
+
 	    time11 = (clock() /( (double)CLOCKS_PER_SEC));
-	    if(time11 - time10 > js_time0){
-		    js_gind = iGroup;
-		    js_gptcl = pLen[iGroup];
-		    js_time0 = time11 - time10;
-		    js_visit = jinsu;
-	    }
 
             if(pLen[iGroup]<minnum){
                 Int_t ii=pHead[pGroupHead[iGroup]];
@@ -280,7 +356,7 @@ namespace NBody
             }
             if (maxlen<pLen[iGroup]){maxlen=pLen[iGroup];}
 
-	    cout<<"%123123	"<<i<<" / "<<numparts<<" / "<<maxlen<<endl;
+	    //cout<<"%123123	"<<i<<" / "<<numparts<<" / "<<maxlen<<" / "<<time11-time10<<" / "<<(time11 - time10)/omp_get_max_threads()<<endl;
         }
 
 
@@ -414,89 +490,6 @@ namespace NBody
                 if (iHead==numparts) iHead=0;
 
 		jinsu ++;
-		// -- JS --
-		//// Begin Ball Search. This routine is based on a bottom-up structure finding
-
-		//js_lp = NULL; js_prev = NULL; js_next = NULL;
-
-		//js_lp=(LeafNode*)FindLeafNode(iid);
-
-		//// Setting Linking length Area
-		//js_volume = 1.;
-		//for(int js_i=0; js_i<ND; js_i++){
-		//	js_linkbdn[js_i][0] = max(bucket[iid].GetPhase(js_i) - sqrt(fdist2), js_rootbdn[js_i][0]) + 1e-8;
-		//	js_linkbdn[js_i][1] = min(bucket[iid].GetPhase(js_i) + sqrt(fdist2), js_rootbdn[js_i][1]) - 1e-8;
-
-		//	js_volume = js_volume * (js_linkbdn[js_i][1] - js_linkbdn[js_i][0]);
-		//}
-		//// Initial Search
-                //for (int j = 0; j < 3; j++) off[j] = 0.0;
-                //if (period==NULL) js_lp->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-                //else js_lp->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-
-
-		//for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_lp->GetBoundary(js_i, js_j);
-
-		//// If Leap node encloses the linking-length sphere
-		//js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//if(js_volumetmp>0.0) js_volume = js_volume - js_volumetmp;
-
-
-		//// Initial Leaf Nodes on both sides
-		//js_prev = (Node *)js_lp->GetPrev();
-		//js_next = (Node *)js_lp->GetNext();
-
-		//// 4 node mode
-		//Node *js_prev2, *js_next2;
-		//js_next2 = js_next;
-		//for(int js_i=0; js_i<numleafnodes/2; js_i++){
-		//	js_next2 = js_next2->GetNext();
-		//}
-		//js_prev2 = js_next2->GetPrev();
-
-
-		//// Now Search
-		//while(js_volume > 0.){
-		//	// Prev
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_prev->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_prev)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_prev)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_prev = js_prev->GetPrev();
-
-		//	// Next
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_next->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_next)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_next)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_next = js_next->GetNext();
-
-		//	// Prev2
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_prev2->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_prev2)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_prev2)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_prev2 = js_prev2->GetPrev();
-		//	
-		//	// Next2
-		//	for(int js_i=0; js_i<ND; js_i++) for(int js_j=0; js_j<2; js_j++) js_bdn2[js_i][js_j] = js_next2->GetBoundary(js_i, js_j);
-		//	js_volumetmp = JS_GetOverrapVolume(js_linkbdn, js_bdn2);
-		//	if(js_volumetmp>0.0){
-		//		js_volume = js_volume - js_volumetmp;
-		//		if (period==NULL) ((LeafNode*)js_next2)->FOFSearchBall(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
-		//		else ((LeafNode*)js_next2)->FOFSearchBallPeriodic(0.0,fdist2,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
-		//	}
-		//	js_next2 = js_next2->GetNext();
-		//}
 
                 //now begin Ball search. This node routine finds all particles
                 //within a distance fdist2, marks all particles using their IDS and pGroup array
@@ -509,13 +502,6 @@ namespace NBody
 
 
             }
-	    time11 = (clock() /( (double)CLOCKS_PER_SEC));
-	    if(time11 - time10 > js_time0){
-		    js_gind = iGroup;
-		    js_gptcl = pLen[iGroup];
-		    js_time0 = time11 - time10;
-		    js_visit = jinsu;
-	    }
 
             if(pLen[iGroup]<minnum){
                 Int_t ii=pHead[pGroupHead[iGroup]];
@@ -525,6 +511,7 @@ namespace NBody
             pLen[iGroup--]=0;
             }
             if (maxlen<pLen[iGroup]){maxlen=pLen[iGroup];}
+	    //cout<<"%123123	"<<i<<" / "<<numparts<<" / "<<maxlen<<endl;
         }
 
 
@@ -642,6 +629,127 @@ namespace NBody
             }
             //determine biggest group
             else if (maxlen<pLen[iGroup]){maxlen=pLen[iGroup];}
+
+	    //if(numparts==458) if(pLen[iGroup]==130) if(pGroup[id]==iGroup) for(int js_i=0; js_i<numparts; js_i++) if(pGroup[bucket[js_i].GetID()]==iGroup) cout<<"%		"<<i<<" / "<<bucket[i].GetID()<<" / "<<iGroup<<" / "<<js_i<<" / "<<bucket[js_i].GetID()<<endl;
+        }
+
+	//if(numparts==458) for(Int_t i=1; i<=iGroup; i++) cout<<"		"<<i<<" / "<<pLen[i]<<endl;
+
+        //for all groups that were too small reset id to 0
+        for (Int_t i=0;i<numparts;i++) if(pGroup[bucket[i].GetID()]==-1)pGroup[bucket[i].GetID()]=0;
+
+        //free memory for arrays that are not needed
+        delete[] Fifo;
+        delete[] pBucketFlag;
+        if (iph) delete[] pHead;
+        if (ipt) delete[] pTail;
+        if (ipn) delete[] pNext;
+
+        if (iGroup>0){
+            if (order) {
+                //generate pList array to store go through particle list and generate linked list
+                Int_t **pList, *pCount;
+                pList=new Int_t*[iGroup+1];
+                pCount=new Int_t[iGroup+1];
+                for (Int_t i=1;i<=iGroup;i++) {pList[i]=new Int_t[pLen[i]];pCount[i]=0;}
+                for (Int_t i=0;i<numparts;i++) {
+                    Int_t gid=pGroup[bucket[i].GetID()];
+		    //if (numparts==458) if (gid>0) cout<<"		"<<i<<" / "<<numparts<<" / "<<gid<<" / "<<pCount[gid]+1<<" / "<<endl;
+                    if (gid>0) pList[gid][pCount[gid]++]=i;
+
+                }
+                //now order group indices
+                PriorityQueue *pq=new PriorityQueue(iGroup);
+                for (Int_t i = 1; i <=iGroup; i++) pq->Push(i, pLen[i]);
+                maxlen=pq->TopPriority();
+		//if(numparts==458) cout<<"%123123	Finish loop 8"<<" / "<<iGroup<<" / "<<minnum<<endl;
+                for (Int_t i = 1;i<=iGroup; i++) {
+			//if(numparts==458) cout<<"%123123	Finish loop 8A - "<<i<<" / "<<iGroup<<endl;
+                    Int_t groupid=pq->TopQueue();
+			//if(numparts==458) cout<<"%123123	Finish loop 8B - "<<i<<" / "<<iGroup<<" / "<<groupid<<endl;
+                    pq->Pop();
+			//if(numparts==458) cout<<"%123123	Finish loop 8C - "<<i<<" / "<<iGroup<<endl;
+			//if(numparts==458) cout<<"%123123	Finish loop 8C - "<<i<<" / "<<pLen[groupid]<<" / "<<endl;
+                    for (Int_t j=0;j<pLen[groupid];j++){
+			    //if(numparts==458) cout<<"		"<<j<<" / "<<pLen[groupid]<<" / "<<pList[groupid][j]<<" / "<<bucket[pList[groupid][j]].GetID()<<endl;
+			    pGroup[bucket[pList[groupid][j]].GetID()]=i;
+		    }
+                    delete[] pList[groupid];
+                }
+                delete[] pList;
+                delete[] pCount;
+                delete pq;
+            }
+            //printf("Found %d groups. Largest is %d with %d particles.\n",iGroup,maxlenid,maxlen);
+        }
+        //else printf("No groups found.\n");
+
+        if (ipl) delete[] pLen;
+        delete[] pGroupHead;
+        numgroup=iGroup;
+        return pGroup;
+    }
+
+    Int_t* KDTree::FOFCriterion_JS(FOFcompfunc cmp, Double_t *params, Int_t &numgroup, Int_t minnum, int order, int ipcheckflag, FOFcheckfunc check, Int_tree_t *pHead, Int_tree_t *pNext, Int_tree_t *pTail, Int_tree_t *pLen)
+    {
+        Int_t *pGroup=new Int_t[numparts];
+        Int_tree_t *pGroupHead=new Int_tree_t[numparts];
+        Int_tree_t *Fifo=new Int_tree_t[numparts];
+        short *pBucketFlag=new short[numnodes];
+
+        bool iph,ipt,ipn,ipl;
+        iph=ipt=ipn=ipl=false;
+        if (pHead==NULL)    {pHead=new Int_tree_t[numparts];iph=true;}
+        if (pNext==NULL)    {pNext=new Int_tree_t[numparts];ipn=true;}
+        if (pLen==NULL)     {pLen=new Int_tree_t[numparts];ipl=true;}
+        if (pTail==NULL)    {pTail=new Int_tree_t[numparts];ipt=true;}
+
+        Double_t off[6];
+        Int_t iGroup=0,iHead=0,iTail=0,id,iid;
+        Int_t maxlen=0;
+
+        //initial arrays
+        for (Int_t i=0;i<numparts;i++) {
+            id=bucket[i].GetID();
+            if (ipcheckflag) pGroup[id]=check(bucket[i],params);
+            else pGroup[id]=0;
+            pHead[i]=pTail[i]=i;
+            pNext[i]=-1;
+        }
+        for (Int_t i=0;i<numnodes;i++) pBucketFlag[i]=0;
+
+        for (Int_t i=0;i<numparts;i++){
+            //if particle already member of group, ignore and go to next particle
+            id=bucket[i].GetID();
+            if(pGroup[id]!=0) continue;
+            pGroup[id]=++iGroup;
+            pLen[iGroup]=1;
+            pGroupHead[iGroup]=i;
+            Fifo[iTail++]=i;
+
+            //if reach the end of particle list, set iTail to zero and wrap around
+            if(iTail==numparts) iTail=0;
+            //continue search for this group until one has wrapped around such that iHead==iTail
+            while(iHead!=iTail) {
+                iid=Fifo[iHead++];
+                if (iHead==numparts) iHead=0;
+
+                //now begin search.
+                for (int j = 0; j < 6; j++) off[j] = 0.0;
+                if (period==NULL) root->FOFSearchCriterion_JS(0.0,cmp,params,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,iid);
+                else root->FOFSearchCriterionPeriodic_JS(0.0,cmp,params,iGroup,numparts,bucket,pGroup,pLen,pHead,pTail,pNext,pBucketFlag, Fifo,iTail,off,period,iid);
+            }
+
+            //make sure group big enough
+            if(pLen[iGroup]<minnum){
+                Int_t ii=pHead[pGroupHead[iGroup]];
+                do {
+                    pGroup[bucket[ii].GetID()]=-1;
+                } while ((ii=pNext[ii])!=-1);
+            pLen[iGroup--]=0;
+            }
+            //determine biggest group
+            else if (maxlen<pLen[iGroup]){maxlen=pLen[iGroup];}
         }
 
         //for all groups that were too small reset id to 0
@@ -689,7 +797,6 @@ namespace NBody
         numgroup=iGroup;
         return pGroup;
     }
-
     //FOF search with particles allowed to be basis of links set by FOFcheckfunc
     Int_t* KDTree::FOFCriterionSetBasisForLinks(FOFcompfunc cmp, Double_t *params, Int_t &numgroup, Int_t minnum, int order, int ipcheckflag, FOFcheckfunc check, Int_tree_t *pHead, Int_tree_t *pNext, Int_tree_t *pTail, Int_tree_t *pLen)
     {

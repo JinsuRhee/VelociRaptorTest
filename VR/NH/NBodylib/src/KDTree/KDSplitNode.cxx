@@ -455,59 +455,117 @@ namespace NBody
 
     void SplitNode::SearchBallPos(Double_t rd, Double_t fdist2, Int_t iGroup, Particle *bucket, Int_t *Group, Double_t *dist2, Double_t* off, Int_t target, int dim)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
-        if (new_off < 0)
-        {
-            left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
-                off[cut_dim] = old_off;
-            }
-        }
+
+	//first check to see if entire node lies wihtin search distance
+	// -- JS --
+	Double_t js_pos[6], js_dist, js_rr;
+        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
+	js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 )
+	{
+		cout<<"%123123          "<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"         Split-SearchBallPos A"<<endl;
+		exit(9);
+	}
+
+	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
+		for (Int_t i = bucket_start; i < bucket_end; i++)
+		{
+			if(i==target) continue;
+			Int_t id=bucket[i].GetID();
+			Double_t dum_dist2 = DistanceSqd(bucket[target].GetPosition(),bucket[i].GetPosition(), dim);
+			Group[id]=iGroup;
+			dist2[id]=dum_dist2;
+		}
+	}
+	else{
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
+        	if (new_off < 0)
+        	{
+        	    left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,target, dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+	}
     }
 
     void SplitNode::SearchBallPos(Double_t rd, Double_t fdist2, Int_t iGroup, Particle *bucket, Int_t *Group, Double_t *dist2, Double_t* off, Double_t *x, int dim)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = x[cut_dim] - cut_val;
-        if (new_off < 0)
-        {
-            left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
-                off[cut_dim] = old_off;
-            }
-        }
+	//first check to see if entire node lies wihtin search distance
+	// -- JS --
+	Double_t js_pos[6], js_dist, js_rr;
+	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
+	js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+	        cout<<"%123123          "<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+	        cout<<"         Split-SearchBallPos B"<<endl;
+	        exit(9);
+	}
+
+	//
+	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
+		for (Int_t i = bucket_start; i < bucket_end; i++)
+		{
+			Int_t id=bucket[i].GetID();
+			Double_t dum_dist2 = DistanceSqd(x,bucket[i].GetPosition(), dim);
+			Group[id]=iGroup;
+			dist2[id]=dum_dist2;
+		}
+	}
+	else
+	{
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = x[cut_dim] - cut_val;
+        	if (new_off < 0)
+        	{
+        	    left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+	}
     }
+
     void SplitNode::SearchBallPos(Double_t rd, Double_t fdist2, Int_t iGroup, Particle *bucket, Int_t *Group, Double_t *dist2, Double_t* off, Coordinate x, int dim)
     {
 		SearchBallPos(rd,fdist2,iGroup,bucket,Group,dist2,off,x.GetCoord(),dim);
@@ -516,58 +574,104 @@ namespace NBody
 
     void SplitNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, Int_t *tagged, Double_t* off, Int_t target, Int_t &nt, int dim)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
-        if (new_off < 0)
-        {
-            left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
-                off[cut_dim] = old_off;
-            }
-        }
+	//first check to see if entire node lies wihtin search distance
+	// -- JS --
+	Double_t js_pos[6], js_dist, js_rr;
+	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
+	js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123          "<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"         Split-SearchBallPosTagged A"<<endl;
+		exit(9);
+	}
+
+	//
+	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
+		for (Int_t i = bucket_start; i < bucket_end; i++){
+			if(i==target) continue;
+			tagged[nt++]=i;
+		}
+	}
+	else
+	{
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
+        	if (new_off < 0)
+        	{
+        	    left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,nt,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+	}
     }
 
     void SplitNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, Int_t *tagged, Double_t* off, Double_t *x, Int_t &nt, int dim)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = x[cut_dim] - cut_val;
-        if (new_off < 0)
-        {
-            left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
-                off[cut_dim] = old_off;
-            }
-        }
+	//first check to see if entire node lies wihtin search distance
+	// -- JS --
+	Double_t js_pos[6], js_dist, js_rr;
+	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
+	js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123          "<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"         Split-SearchBallPosTagged B"<<endl;
+		exit(9);
+	}
+
+	//-----
+	
+	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
+		for (Int_t i = bucket_start; i < bucket_end; i++) tagged[nt++]=i;
+	}
+	else
+	{
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = x[cut_dim] - cut_val;
+        	if (new_off < 0)
+        	{
+        	    left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,nt,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+	}
     }
     void SplitNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, Int_t *tagged, Double_t* off, Coordinate x, Int_t &nt,int dim)
     {
@@ -576,58 +680,102 @@ namespace NBody
 
     void SplitNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, vector<Int_t> &tagged, Double_t* off, Int_t target, int dim)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
-        if (new_off < 0)
-        {
-            left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
-                off[cut_dim] = old_off;
-            }
-        }
+	//first check to see if entire node lies wihtin search distance
+	// -- JS --
+	Double_t js_pos[6], js_dist, js_rr;
+	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
+	js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123          "<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"         Split-SearchBallPosTagged C"<<endl;
+		exit(9);
+	}
+
+	//-----
+	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
+		for (Int_t i = bucket_start; i < bucket_end; i++){
+			if(i!=target) tagged.push_back(i);
+		}
+	}
+	else
+	{
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
+        	if (new_off < 0)
+        	{
+        	    left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,target,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+	}
     }
 
     void SplitNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, vector<Int_t> &tagged, Double_t* off, Double_t *x, int dim)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = x[cut_dim] - cut_val;
-        if (new_off < 0)
-        {
-            left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
-                off[cut_dim] = old_off;
-            }
-        }
+	//first check to see if entire node lies wihtin search distance
+	// -- JS --
+	Double_t js_pos[6], js_dist, js_rr;
+	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
+	js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123          "<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"         Split-SearchBallPosTagged D"<<endl;
+		exit(9);
+	}
+	//-----
+	
+	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
+		for (Int_t i = bucket_start; i < bucket_end; i++) tagged.push_back(i);
+	}
+	else
+	{
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = x[cut_dim] - cut_val;
+        	if (new_off < 0)
+        	{
+        	    left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < fdist2)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->SearchBallPosTagged(rd,fdist2,bucket,tagged,off,x,dim);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+	}
     }
     void SplitNode::SearchBallPosTagged(Double_t rd, Double_t fdist2, Particle *bucket, vector<Int_t> &tagged, Double_t* off, Coordinate x, int dim)
     {
@@ -865,66 +1013,242 @@ namespace NBody
 
     void SplitNode::FOFSearchBall(Double_t rd, Double_t fdist2, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
-        if (new_off < 0)
-        {
-            left->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                right->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-            rd += -old_off*old_off + new_off*new_off;
-            if (rd < fdist2)
-            {
-                off[cut_dim] = new_off;
-                left->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-                off[cut_dim] = old_off;
-            }
-        }
+
+	/// -- JS --
+	/// Merge this split node if this node is entirely enclosed by a linking length sphere
+	///
+
+	if(BucketFlag[nid]&&Head[target]==Head[bucket_start])return;
+	int flag=Head[bucket_start];
+
+	Double_t js_pos[6], js_dist, js_rr;
+	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
+	js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+
+	if(js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		       	cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<nActive<<endl;
+			cout<<"			SplitNode - FOFSearchBall A"<<endl;
+	}
+
+	if (sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
+		//SKIP This Node
+		flag=0;
+	}
+	else if (sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
+		//This node is entirely enclosed
+		Int_t id;
+            
+		for (Int_t i = bucket_start; i < bucket_end; i++){
+			id=bucket[i].GetID();
+			if (Group[id]) continue;
+			Group[id]=iGroup;
+			Fifo[iTail++]=i;
+			Len[iGroup]++;
+                
+			Next[Tail[Head[target]]]=Head[i];
+			Tail[Head[target]]=Tail[Head[i]];
+			Head[i]=Head[target];
+                
+			if(iTail==nActive)iTail=0;
+		}
+	}	
+	else{
+
+		flag = 0;
+		///
+		Double_t old_off = off[cut_dim];
+		Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
+		if (new_off < 0)
+		{
+		    left->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+		    rd += -old_off*old_off + new_off*new_off;
+		    if (rd < fdist2)
+		    {
+			off[cut_dim] = new_off;
+			right->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+			off[cut_dim] = old_off;
+		    }
+		}
+		else
+		{
+		    right->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+		    rd += -old_off*old_off + new_off*new_off;
+		    if (rd < fdist2)
+		    {
+			off[cut_dim] = new_off;
+			left->FOFSearchBall(rd,fdist2,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+			off[cut_dim] = old_off;
+		    }
+		}
+
+		if(BucketFlag[left->GetID()]==1 && BucketFlag[right->GetID()]==1) BucketFlag[nid] = 1;
+	}
+	if (flag) BucketFlag[nid]=1;
     }
 
     //key here is params which tell one how to search the tree
     void SplitNode::FOFSearchCriterion(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target)
     {
-        Double_t old_off = off[cut_dim];
-        Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
-        //types of trees
-        const int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4;
-        double invscaling;
-        if ((int)params[0]==TPHYS) invscaling = 1.0/params[1];
-        else if ((int)params[0]==TVEL) invscaling = 1.0/params[2];
-        else if ((int)params[0]==TPHS) invscaling = 1.0/(params[(cut_dim<3)*1+(cut_dim>=3)*2]);
-        else invscaling=1.0;
-        if (new_off < 0)
-        {
-            left->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-            rd += (-old_off*old_off + new_off*new_off)*invscaling;
-            if (rd < 1)
-            {
-                off[cut_dim] = new_off;
-                right->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-                off[cut_dim] = old_off;
-            }
-        }
-        else
-        {
-            right->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-            rd += (-old_off*old_off + new_off*new_off)*invscaling;
-            if (rd < 1)
-            {
-                off[cut_dim] = new_off;
-                left->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
-                off[cut_dim] = old_off;
-            }
-        }
+	///// -- JS --
+	///// Merge this split node if this node is entirely enclosed by a linking length sphere
+	/////
+
+	if(BucketFlag[nid]&&Head[target]==Head[bucket_start])return;
+	int flag = Head[bucket_start];
+
+	Double_t js_pos[3], js_vel[3], js_dist=0., js_rr;
+	Double_t js_posCen[3], js_velCen[3];
+	for(int js_j=0; js_j<3; js_j++) {js_pos[js_j] = bucket[target].GetPosition(js_j); js_posCen[js_j] = js_center[js_j];}
+	for(int js_j=3; js_j<6; js_j++) {js_vel[js_j-3] = bucket[target].GetVelocity(js_j-3); js_velCen[js_j-3] = js_center[js_j];}
+	js_dist += DistanceSqd(js_pos, js_posCen, 3)/params[6];
+	js_dist += DistanceSqd(js_vel, js_velCen, 3)/params[7];
+
+	js_rr = js_farthest;
+
+	////
+	if(sqrt(js_dist) >= sqrt(js_rr) + 1.0){
+		flag=0;
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - 1.0) && 1.0 > js_rr){
+                for(Int_t i=bucket_start; i < bucket_end; i++){
+                        Int_t id = bucket[i].GetID();
+			//if(Group[id]==iGroup) continue;	// Skip already linked
+			if(Group[id]) continue;	// Skip already linked
+			if(Group[id]<0) continue;	// Skip Background
+                        //if(Group[id]) continue;
+                        Group[id]=iGroup;
+                        Fifo[iTail++]=i;
+                        Len[iGroup]++;
+
+                        Next[Tail[Head[target]]]=Head[i];
+                        Tail[Head[target]]=Tail[Head[i]];
+                        Head[i]=Head[target];
+                        if(iTail==nActive)iTail=0;
+
+                }
+	}
+	else{
+		flag=0;
+
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
+        	//types of trees
+        	const int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4;//,TPHYSF=5,TOMP=6;
+        	double invscaling;
+        	if ((int)params[0]==TPHYS) {
+			invscaling = 1.0/params[1];
+		}
+        	else if ((int)params[0]==TVEL) invscaling = 1.0/params[2];
+        	else if ((int)params[0]==TPHS) invscaling = 1.0/(params[(cut_dim<3)*1+(cut_dim>=3)*2]);
+        	else invscaling=1.0;
+
+		//invscaling = 1;
+		new_off = new_off * sqrt(invscaling);
+
+        	if (new_off < 0)
+        	{
+        	    left->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	    //rd += (-old_off*old_off + new_off*new_off)*invscaling;
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < 1)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	    //rd += (-old_off*old_off + new_off*new_off)*invscaling;
+        	    rd += -old_off*old_off + new_off*new_off;
+        	    if (rd < 1)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+		if(BucketFlag[left->GetID()]==1 && BucketFlag[right->GetID()]==1) BucketFlag[nid] = 1;
+	}
+	if (flag) BucketFlag[nid]=1;
+	///
+    }
+
+    void SplitNode::FOFSearchCriterion_JS(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target)
+    {
+	///// -- JS --
+	///// Merge this split node if this node is entirely enclosed by a linking length sphere
+	/////
+	
+	if(BucketFlag[nid]&&Head[target]==Head[bucket_start])return;
+	int flag = Head[bucket_start];
+
+	Double_t js_pos[3], js_vel[3], js_dist=0., js_rr;
+	Double_t js_posCen[3], js_velCen[3];
+	for(int js_j=0; js_j<3; js_j++) {js_pos[js_j] = bucket[target].GetPosition(js_j); js_posCen[js_j] = js_center[js_j];}
+	for(int js_j=3; js_j<6; js_j++) {js_vel[js_j-3] = bucket[target].GetVelocity(js_j-3); js_velCen[js_j-3] = js_center[js_j];}
+	js_dist += DistanceSqd(js_pos, js_posCen, 3)/params[6];
+	js_dist += DistanceSqd(js_vel, js_velCen, 3)/params[7];
+
+	js_rr = js_farthest;
+
+	if(sqrt(js_dist) >= sqrt(js_rr) + 1.0){
+		flag=0;
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - 1.0) && 1.0 > js_rr){
+                for(Int_t i=bucket_start; i < bucket_end; i++){
+                        Int_t id = bucket[i].GetID();
+                        //if(Group[id]) continue;
+			if(Group[id]==iGroup) continue;
+			if(Group[id]<0) continue;
+                        Group[id]=iGroup;
+                        Fifo[iTail++]=i;
+                        Len[iGroup]++;
+
+                        Next[Tail[Head[target]]]=Head[i];
+                        Tail[Head[target]]=Tail[Head[i]];
+                        Head[i]=Head[target];
+                        if(iTail==nActive)iTail=0;
+                }
+	}
+	else{
+		flag=0;
+
+        	Double_t old_off = off[cut_dim];
+        	Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
+        	//types of trees
+        	const int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4;//,TPHYSF=5,TOMP=6;
+        	double invscaling;
+        	if ((int)params[0]==TPHYS) invscaling = 1.0/params[1];
+        	else if ((int)params[0]==TVEL) invscaling = 1.0/params[2];
+        	else if ((int)params[0]==TPHS) invscaling = 1.0/(params[(cut_dim<3)*1+(cut_dim>=3)*2]);
+        	else invscaling=1.0;
+        	if (new_off < 0)
+        	{
+        	    left->FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	    rd += (-old_off*old_off + new_off*new_off)*invscaling;
+        	    if (rd < 1)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        right->FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+        	else
+        	{
+        	    right->FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	    rd += (-old_off*old_off + new_off*new_off)*invscaling;
+        	    if (rd < 1)
+        	    {
+        	        off[cut_dim] = new_off;
+        	        left->FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        	        off[cut_dim] = old_off;
+        	    }
+        	}
+	}
+	if (flag) BucketFlag[nid]=1;
     }
 
     //key here is params which tell one how to search the tree
@@ -933,7 +1257,7 @@ namespace NBody
         Double_t old_off = off[cut_dim];
         Double_t new_off = bucket[target].GetPhase(cut_dim) - cut_val;
         //types of trees
-        const int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4;
+        const int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4;//,TPHYSF=5,TOMP=6;
         double invscaling;
         if ((int)params[0]==TPHYS) invscaling = 1.0/params[1];
         else if ((int)params[0]==TVEL) invscaling = 1.0/params[2];
@@ -1577,6 +1901,40 @@ namespace NBody
             PeriodicReflectionND(x0,xp,p,NSPACEDIM);
             for (int j=0;j<3;j++) bucket[target].SetPosition(j,xp[j]);
             FOFSearchCriterion(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        }
+        for (int j=0;j<3;j++) bucket[target].SetPosition(j,x0[j]);
+    }
+
+    void SplitNode::FOFSearchCriterionPeriodic_JS(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Double_t *p, Int_t target)
+    {
+        FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        Coordinate x0(bucket[target].GetPosition()),xp;
+        for (int k=0;k<NSPACEDIM;k++) {
+            for (int j = 0; j < NSPACEDIM; j++) off[j] = 0.0;
+            PeriodicReflection1D(x0,xp,p,k);
+            for (int j=0;j<3;j++) bucket[target].SetPosition(j,xp[j]);
+            FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        }
+        if (NSPACEDIM==3) {
+            for (int j = 0; j < NSPACEDIM; j++) off[j] = 0.0;
+            PeriodicReflection2D(x0,xp,p,0,1);
+            for (int j=0;j<3;j++) bucket[target].SetPosition(j,xp[j]);
+            FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+            for (int j = 0; j < NSPACEDIM; j++) off[j] = 0.0;
+            PeriodicReflection2D(x0,xp,p,0,2);
+            for (int j=0;j<3;j++) bucket[target].SetPosition(j,xp[j]);
+            FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+            for (int j = 0; j < NSPACEDIM; j++) off[j] = 0.0;
+            PeriodicReflection2D(x0,xp,p,1,2);
+            for (int j=0;j<3;j++) bucket[target].SetPosition(j,xp[j]);
+            FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
+        }
+        // search all axis if current max dist less than search radius
+        if (NSPACEDIM>1) {
+            for (int j = 0; j < NSPACEDIM; j++) off[j] = 0.0;
+            PeriodicReflectionND(x0,xp,p,NSPACEDIM);
+            for (int j=0;j<3;j++) bucket[target].SetPosition(j,xp[j]);
+            FOFSearchCriterion_JS(rd,cmp,params,iGroup,nActive,bucket,Group,Len,Head,Tail,Next,BucketFlag,Fifo,iTail,off,target);
         }
         for (int j=0;j<3;j++) bucket[target].SetPosition(j,x0[j]);
     }

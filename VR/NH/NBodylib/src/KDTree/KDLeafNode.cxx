@@ -249,18 +249,25 @@ namespace NBody
         //first check to see if entire node lies wihtin search distance
 	// -- JS --
         Double_t js_pos[6], js_dist, js_rr;
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPosition(js_j);
+        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 	
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"		Leaf-SearchBallPos A"<<endl;
+		exit(9);
+	}
+	// -----
+	//
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
 	}
 	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){	
             for (Int_t i = bucket_start; i < bucket_end; i++)
             {
+		if(i==target) continue;
                 Int_t id=bucket[i].GetID();
                 Double_t dist2 = DistanceSqd(bucket[target].GetPosition(),bucket[i].GetPosition(), dim);
                 Group[id]=iGroup;
@@ -318,11 +325,15 @@ namespace NBody
         Double_t js_pos[6], js_dist, js_rr;
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
         js_dist = DistanceSqd(js_pos, js_center, numdim);
-
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
         // -----
 	
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"		Leaf-SearchBallPos B"<<endl;
+		exit(9);
+	}
+
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
 	}
 	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){	
@@ -384,16 +395,23 @@ namespace NBody
 	Double_t js_pos[6], js_dist, js_rr;
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
         js_dist = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"		Leaf-SearchBallPosTagged A"<<endl;
+		exit(9);
+	}
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
 	}
 	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
             for (Int_t i = bucket_start; i < bucket_end; i++)
-                tagged[nt++]=i;
+	    {
+		    if(i==target) continue;
+		    tagged[nt++]=i;
+	    }
 	}
 	else
 	for (Int_t i = bucket_start; i < bucket_end; i++)
@@ -430,8 +448,12 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"		Leaf-SearchBallPosTagged B"<<endl;
+		exit(9);
+	}
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -480,15 +502,20 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"		Leaf-SearchBallPosTagged C"<<endl;
+		exit(9);
+	}
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
 	}
 	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
-            for (Int_t i = bucket_start; i < bucket_end; i++)
-		    tagged.push_back(i);
+            for (Int_t i = bucket_start; i < bucket_end; i++){
+		    if(i!=target) tagged.push_back(i);
+	    }
 	}
 	else
 	for (Int_t i = bucket_start; i < bucket_end; i++)
@@ -526,8 +553,12 @@ namespace NBody
         for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = x[js_j];
         js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-        for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-        js_rr = DistanceSqd(js_pos, js_center, numdim);
+	js_rr = js_farthest;
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<endl;
+		cout<<"		Leaf-SearchBallPosTagged D"<<endl;
+		exit(9);
+	}
         // -----
 
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
@@ -687,6 +718,8 @@ namespace NBody
         //if bucket already linked and particle already part of group, do nothing.
 
         if(BucketFlag[nid]&&Head[target]==Head[bucket_start])return;
+	
+	
         //this flag is initialized to !=0 and if entire bucket searched and all particles already linked,
         //then BucketFlag[nid]=1
         int flag=Head[bucket_start];
@@ -704,13 +737,18 @@ namespace NBody
 	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[target].GetPhase(js_j);
 	js_dist = DistanceSqd(js_pos, js_center, numdim);
 
-	for(int js_j=0; js_j<numdim; js_j++) js_pos[js_j] = bucket[bucket_start].GetPhase(js_j);
-	js_rr = DistanceSqd(js_pos, js_center, numdim);
-	// -----
+	js_rr = js_farthest;
 
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr)) !=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<nActive<<endl;
+		cout<<"			LeafNode - FOFSearchBall A"<<endl;
+		exit(9);
+	}
+	// -----
 	if(sqrt(js_dist) >= sqrt(js_rr) + sqrt(fdist2)){
 	//Skip this node
-		return;
+		//return;
+		flag=0;
 	}
 	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - sqrt(fdist2)) && fdist2 > js_rr){
 	//The whole node is enclosed by the linking-length sphere
@@ -757,6 +795,7 @@ namespace NBody
 		}
         }
         if (flag) BucketFlag[nid]=1;
+
     }
     void LeafNode::FOFSearchCriterion(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target)
     {
@@ -765,26 +804,128 @@ namespace NBody
         //this flag is initialized to !=0 and if entire bucket searched and all particles already linked,
         //then BucketFlag[nid]=1
         int flag=Head[bucket_start];
-        for (Int_t i = bucket_start; i < bucket_end; i++)
-        {
-            if (flag!=Head[i])flag=0;
-            Int_t id=bucket[i].GetID();
-            //if already linked don't do anything
-            if (Group[id]==iGroup) continue;
-            //if tag below zero then don't do anything
-            if (Group[id]<0) continue;
-            if (cmp(bucket[target],bucket[i],params)) {
-                Group[id]=iGroup;
-                Fifo[iTail++]=i;
-                Len[iGroup]++;
 
-                Next[Tail[Head[target]]]=Head[i];
-                Tail[Head[target]]=Tail[Head[i]];
-                Head[i]=Head[target];
-                if(iTail==nActive)iTail=0;
-                flag=0;
-            }
-        }
+	//--JS--
+	Double_t js_pos[3], js_vel[3], js_dist=0., js_rr;
+	Double_t js_posCen[3], js_velCen[3];
+	for(int js_j=0; js_j<3; js_j++) {js_pos[js_j] = bucket[target].GetPosition(js_j); js_posCen[js_j] = js_center[js_j];}
+	for(int js_j=3; js_j<6; js_j++) {js_vel[js_j-3] = bucket[target].GetVelocity(js_j-3); js_velCen[js_j-3] = js_center[js_j];}
+	js_dist += DistanceSqd(js_pos, js_posCen, 3)/params[6];
+	js_dist += DistanceSqd(js_vel, js_velCen, 3)/params[7];
+
+	js_rr	= js_farthest;
+
+	if(sqrt(js_dist) >= sqrt(js_rr) + 1.0){
+		flag=0;
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - 1.0) && 1.0 > js_rr){
+		//The whole particles in this node is included
+		for(Int_t i=bucket_start; i < bucket_end; i++){
+			Int_t id = bucket[i].GetID();
+			//if(Group[id]==iGroup) continue;
+			if(Group[id]<0) continue;
+			if(Group[id]) continue;
+			Group[id]=iGroup;
+			Fifo[iTail++]=i;
+			Len[iGroup]++;
+
+			Next[Tail[Head[target]]]=Head[i];
+			Tail[Head[target]]=Tail[Head[i]];
+			Head[i]=Head[target];
+			if(iTail==nActive)iTail=0;
+		}
+	}
+	else{
+        	for (Int_t i = bucket_start; i < bucket_end; i++)
+        	{
+        	    if (flag!=Head[i])flag=0;
+        	    Int_t id=bucket[i].GetID();
+        	    //if already linked don't do anything
+        	    //if (Group[id]==iGroup) continue;
+        	    if (Group[id]) continue;
+        	    //if tag below zero then don't do anything
+        	    if (Group[id]<0) continue;
+        	    if (cmp(bucket[target],bucket[i],params)) {
+        	        Group[id]=iGroup;
+        	        Fifo[iTail++]=i;
+        	        Len[iGroup]++;
+
+        	        Next[Tail[Head[target]]]=Head[i];
+        	        Tail[Head[target]]=Tail[Head[i]];
+        	        Head[i]=Head[target];
+        	        if(iTail==nActive)iTail=0;
+        	        flag=0;
+
+        	    }
+        	}
+	}
+        if (flag) BucketFlag[nid]=1;
+    }
+
+
+    void LeafNode::FOFSearchCriterion_JS(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target)
+    {
+        //if bucket already linked and particle already part of group, do nothing.
+        if(BucketFlag[nid]&&Head[target]==Head[bucket_start])return;
+        //this flag is initialized to !=0 and if entire bucket searched and all particles already linked,
+        //then BucketFlag[nid]=1
+        int flag=Head[bucket_start];
+
+	//--JS--
+	Double_t js_pos[3], js_vel[3], js_dist=0., js_rr;
+	Double_t js_posCen[3], js_velCen[3];
+	for(int js_j=0; js_j<3; js_j++) {js_pos[js_j] = bucket[target].GetPosition(js_j); js_posCen[js_j] = js_center[js_j];}
+	for(int js_j=3; js_j<6; js_j++) {js_vel[js_j-3] = bucket[target].GetVelocity(js_j-3); js_velCen[js_j-3] = js_center[js_j];}
+	js_dist += DistanceSqd(js_pos, js_posCen, 3)/params[6];
+	js_dist += DistanceSqd(js_vel, js_velCen, 3)/params[7];
+
+	js_rr	= js_farthest;
+
+	if (js_rr<0 || js_dist<0 || isnan(sqrt(js_rr))!=0 || isnan(sqrt(js_dist)) !=0 ){
+		cout<<"%123123		"<<js_dist<<" / "<<js_rr<<" / "<<nid<<" / "<<bucket_start<<" / "<<bucket_end<<" / "<<nActive<<endl;
+		exit(9);
+	}
+	if(sqrt(js_dist) >= sqrt(js_rr) + 1.0){
+		flag=0;
+	}
+	else if(sqrt(js_dist) <= abs(sqrt(js_rr) - 1.0) && 1.0 > js_rr){
+		//The whole particles in this node is included
+		for(Int_t i=bucket_start; i < bucket_end; i++){
+			Int_t id = bucket[i].GetID();
+			if(Group[id]==iGroup) continue;
+			if(Group[id]<0) continue;
+			Group[id]=iGroup;
+			Fifo[iTail++]=i;
+			Len[iGroup]++;
+
+			Next[Tail[Head[target]]]=Head[i];
+			Tail[Head[target]]=Tail[Head[i]];
+			Head[i]=Head[target];
+			if(iTail==nActive)iTail=0;
+		}
+	}
+	else{
+        	for (Int_t i = bucket_start; i < bucket_end; i++)
+        	{
+        	    if (flag!=Head[i])flag=0;
+        	    Int_t id=bucket[i].GetID();
+        	    //if already linked don't do anything
+        	    if (Group[id]==iGroup) continue;
+        	    //if tag below zero then don't do anything
+        	    if (Group[id]<0) continue;
+        	    if (cmp(bucket[target],bucket[i],params)) {
+        	        Group[id]=iGroup;
+        	        Fifo[iTail++]=i;
+        	        Len[iGroup]++;
+
+        	        Next[Tail[Head[target]]]=Head[i];
+        	        Tail[Head[target]]=Tail[Head[i]];
+        	        Head[i]=Head[target];
+        	        if(iTail==nActive)iTail=0;
+        	        flag=0;
+        	    }
+        	}
+	}
         if (flag) BucketFlag[nid]=1;
     }
     void LeafNode::FOFSearchCriterionSetBasisForLinks(Double_t rd, FOFcompfunc cmp, FOFcheckfunc check, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target)
@@ -1016,6 +1157,11 @@ namespace NBody
     void LeafNode::FOFSearchCriterionPeriodic(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t *off, Double_t *p, Int_t target)
     {
         FOFSearchCriterion(rd, cmp, params, iGroup, nActive, bucket, Group, Len, Head, Tail, Next, BucketFlag, Fifo, iTail, off, target);
+    }
+
+    void LeafNode::FOFSearchCriterionPeriodic_JS(Double_t rd, FOFcompfunc cmp, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t *off, Double_t *p, Int_t target)
+    {
+        FOFSearchCriterion_JS(rd, cmp, params, iGroup, nActive, bucket, Group, Len, Head, Tail, Next, BucketFlag, Fifo, iTail, off, target);
     }
 
     void LeafNode::FOFSearchCriterionSetBasisForLinksPeriodic(Double_t rd, FOFcompfunc cmp, FOFcheckfunc check, Double_t *params, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t *off, Double_t *p, Int_t target)

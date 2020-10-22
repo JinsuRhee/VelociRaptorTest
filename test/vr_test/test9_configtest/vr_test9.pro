@@ -5,7 +5,7 @@ PRO vr_test9, settings
 	drange	= [4., 8.5]
 
 	linking	= [0.20, 1.00]
-	vr_test9_drawgal, settings, masscut=1e9, n_pix=n_pix, n_snap=n_snap, drange=drange, linking=linking, /eps, /cf
+	vr_test9_drawgal, settings, masscut=1e8, n_pix=n_pix, n_snap=n_snap, drange=drange, linking=linking, /eps, /cf
 	STOP
 	linking	= [0.20, 0.20]
 	vr_test9_drawgal, settings, masscut=1e9, n_pix=n_pix, n_snap=n_snap, drange=drange, linking=linking, /eps, /cf

@@ -710,6 +710,8 @@ void GetParamFile(Options &opt)
                         opt.Bsize = atoi(vbuff);
 		    else if (strcmp(tbuff, "Leaf_node_size_sub")==0)
                         opt.Bsize_sub = atoi(vbuff);
+		    else if (strcmp(tbuff, "Leaf_node_size_sub2")==0)
+                        opt.Bsize_sub2 = atoi(vbuff);
 		    else if (strcmp(tbuff, "Leaf_node_maxnum")==0)
 			opt.MaxLeafNodes = atoi(vbuff);
 		    else if (strcmp(tbuff, "Leaf_node_minnum")==0)
@@ -2226,6 +2228,7 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("Nsearch_physical", opt.Nsearch);
     AddEntry("Leaf_node_size_main", opt.Bsize);
     AddEntry("Leaf_node_size_sub", opt.Bsize_sub);
+    AddEntry("Leaf_node_size_sub2", opt.Bsize_sub2);
     AddEntry("Leaf_node_maxnum", opt.MaxLeafNodes);
     AddEntry("Leaf_node_minnum", opt.MinLeafNodes);
 

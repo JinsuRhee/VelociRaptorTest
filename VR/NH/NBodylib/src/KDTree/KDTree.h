@@ -73,8 +73,11 @@ namespace NBody
         /// \name Public variables that specify treetype
         /// 0 is physical tree, 1 is projected physical, 2 is velocity, 3 is full phase-space, 4 is a sub-space of the full space specified by a metric
         /// ie: TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4
+	/// --JS--
+	/// 5 is physical adaptive tree
+	/// 6 is adaptive tree for building OMP domains
         //@{
-        const static int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4,TPHYSF=5,TOMP=5;
+        const static int TPHYS=0,TPROJ=1,TVEL=2,TPHS=3,TMETRIC=4;//,TPHYSA=5,TPHSA=6,TOMP=7;
         //@}
 
         /// \name Public variables that specify kernaltype
@@ -106,6 +109,7 @@ namespace NBody
 	Int_t b2=-1, b3=0;
 	///Tomake additional omp regions
 	Double_t js_rdist;
+	Int_t js_adt;
         ///max number of dimensions of tree
         const static int MAXND=6;
 	///
@@ -172,7 +176,17 @@ namespace NBody
         /// Private methods used in constructing the tree
         //@{
         ///uses prviate function pointers to recursive build the tree
+	//--JS--
+	// BuildNodes 		-> Usual Building with tagging the farthest distance
+	// BuildNodes_OMP	-> For building OMP Tree
+	// BuildNodes_ADT	-> Physical Adaptive Building
+	// BuildNodes_CRIT	-> Building Adaptive for FOFCriterion
+	// 
         Node* BuildNodes(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_OMP(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_ADT(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
+        Node* BuildNodes_CRIT(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2], Double_t *param);
+	Node* BuildNodes_JS(Int_t start, Int_t end, KDTreeOMPThreadPool&, Double_t js_bnd[6][2]);
         //set node ids
         void BuildNodeIDs();
         //recursive setting of ids
@@ -197,7 +211,16 @@ namespace NBody
         /// \name Constructors/Destructors
         //@{
         ///Creates tree from an NBody::Particle array
+	// Normal one
         KDTree(Particle *p, Int_t numparts,
+            Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
+            int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
+            Double_t *Period=NULL, Double_t **metric=NULL,
+            bool iBuildInParallel = true,
+            bool iKeepInputOrder = false
+        );
+	// Adaptive KDTree
+        KDTree(Int_t js_adt, Particle *p, Int_t numparts,
             Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
             int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
             Double_t *Period=NULL, Double_t **metric=NULL,
@@ -211,8 +234,16 @@ namespace NBody
             bool iBuildInParallel = true,
             bool iKeepInputOrder = false
         );
-	///Creates tree for OMP domain (including linkinglength)
+	///Creates OMP Domain
         KDTree(Double_t js_rdist, Particle *p, Int_t numparts,
+            Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
+            int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
+            Double_t *Period=NULL, Double_t **metric=NULL,
+            bool iBuildInParallel = true,
+            bool iKeepInputOrder = false
+        );
+	///Creates tree for SearchSubset (including linkinglength)
+        KDTree(Double_t js_rdist, Double_t *params, Particle *p, Int_t numparts,
             Int_t bucket_size = 16, int TreeType=TPHYS, int KernType=KEPAN, int KernRes=1000,
             int SplittingCriterion=0, int Aniso=0, int ScaleSpace=0,
             Double_t *Period=NULL, Double_t **metric=NULL,
@@ -423,6 +454,8 @@ namespace NBody
         //@{
 
         /// simple physical FOF search, velocity FOF, and 6D phase FOF.
+	void FOF_js_SearchNode(Double_t js_search[6][2], vector<Int_t> &js_nodelist, Node* np, Particle *bucket, Double_t fdist2);
+	void FOF_js_AllSearch(vector<Int_t> js_nodelist, Int_t *js_Fifo, Double_t rd, Double_t fdist2, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target);
 	void FOFSearch_js(Node *node, Double_t rd, Double_t fdist2, Int_t iGroup, Int_t nActive, Particle *bucket, Int_t *Group, Int_tree_t *Len, Int_tree_t *Head, Int_tree_t *Tail, Int_tree_t *Next, short *BucketFlag, Int_tree_t *Fifo, Int_t &iTail, Double_t* off, Int_t target);
         Int_t *FOF_js(Double_t fdist, Int_t &numgroup, Int_t minnum=8, int order=0,
             Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL,
@@ -451,6 +484,7 @@ namespace NBody
                                   Double_t disfunc(Int_t , Double_t *), Int_t npc, Int_t *npca, Int_t &numgroups, Int_t minnum=8);
                                   */
         Int_t *FOFCriterion(FOFcompfunc p, Double_t *params, Int_t &numgroups, Int_t minnum=8, int order=0, int ipcheckflag=0, FOFcheckfunc check=Pnocheck, Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL);
+        Int_t *FOFCriterion_JS(FOFcompfunc p, Double_t *params, Int_t &numgroups, Int_t minnum=8, int order=0, int ipcheckflag=0, FOFcheckfunc check=Pnocheck, Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL);
         ///Link partiles based on criterion and also only allow specific particles to be used as a basis for links using FOFcheckfunc
         Int_t* FOFCriterionSetBasisForLinks(FOFcompfunc cmp, Double_t *params, Int_t &numgroup, Int_t minnum=8, int order=0, int ipcheckflag=0, FOFcheckfunc check=Pnocheck, Int_tree_t *pHead=NULL, Int_tree_t *pNext=NULL, Int_tree_t *pTail=NULL, Int_tree_t *pLen=NULL);
         //Int_t FOFCriterionParticle(FOFcompfunc p, Int_t *pfof, Int_t target, Int_t iGroup, Double_t *params);
@@ -532,6 +566,8 @@ namespace NBody
             KDTreeOMPThreadPool &);
         /// Determine the split dimension
         inline int DetermineSplitDim(Int_t start, Int_t end, Double_t bnd[6][2],
+                KDTreeOMPThreadPool &otp);
+        inline int DetermineSplitDim_POS(Int_t start, Int_t end, Double_t bnd[6][2],
                 KDTreeOMPThreadPool &otp);
         //@}
 

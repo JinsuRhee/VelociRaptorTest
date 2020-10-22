@@ -57,7 +57,8 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
     }
     OMP_Domain *ompdomain;
     int numompregions = ceil(nbodies/(float)opt.openmpfofsize);
-    bool runompfof = (numompregions>=2 && nthreads > 1 && opt.iopenmpfof == 1);
+    //bool runompfof = (numompregions>=2 && nthreads > 1 && opt.iopenmpfof == 1);
+    bool runompfof = (numompregions>=1 && nthreads > 1 && opt.iopenmpfof == 1);
 #endif
     if (opt.p>0) {
         period=new Double_t[3];
@@ -85,14 +86,18 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
     param[6]=param[1];
     cout<<"First build tree ... "<<endl;
 
+    Double_t rdist = sqrt(param[1]);
 #ifdef USEOPENMP
     //if using openmp produce tree with large buckets as a decomposition of the local mpi domain
     //to then run local fof searches on each domain before stitching
     if (runompfof) {
         time3=MyGetTime();
-        Double_t rdist = sqrt(param[1]);
         //determine the omp regions;
-        tree = new KDTree(rdist, Part.data(),nbodies,opt.openmpfofsize,tree->TOMP,tree->KEPAN,100);
+	
+	//--JS--
+	//OMP KDTree
+        tree = new KDTree(rdist, Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
+
 	cout<<"%123123 - Building Root Tree done"<<endl;
 	cout<<"%123123		# of OMP Regions -> "<<tree->GetNumLeafNodes()<<endl;
         tree->OverWriteInputOrder();
@@ -107,13 +112,21 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
     }
     else {
         time3=MyGetTime();
-        tree = new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
+	//// --JS--
+	//// Changed to Adaptive KDTree
+	Int_t js_adt;
+        tree = new KDTree(js_adt, Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
         tree->OverWriteInputOrder();
         if (opt.iverbose) cout<<ThisTask<<": finished building single tree with single OpenMP "<<MyGetTime()-time3<<endl;
     }
 
 #else
-    tree=new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
+
+    //// --JS--
+    //// Changed to Adaptive KDTree
+    Int_t js_adt;
+
+    tree=new KDTree(js_adt, Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
     tree->OverWriteInputOrder();
 #endif
     cout<<"Done"<<endl;
@@ -611,15 +624,15 @@ private(i,vscale2,mtotregion,vx,vy,vz,vmean)
     ngomp=new Int_t[iend+1];
     for (i=0;i<=iend;i++) {pfofomp[i]=NULL;ngomp[i]=0;}
     Double_t xscaling, vscaling;
-    double js_time;
+    double js_time, js_time2;
     Int_t js_npart;
-    int js_bsize;
+    int js_bsize, js_nstep=0;
     //run search if 3DFOF found
     if (numgroups > 0)
     {
 #ifdef USEOPENMP
 #pragma omp parallel default(shared) \
-private(i,tid,xscaling,vscaling,js_time,js_bsize,js_npart)
+private(i,tid,xscaling,vscaling,js_time,js_bsize,js_npart,js_time2)
 {
 #pragma omp for schedule(dynamic,1) nowait
 #endif
@@ -640,22 +653,14 @@ private(i,tid,xscaling,vscaling,js_time,js_bsize,js_npart)
             }
             xscaling=1.0/xscaling;vscaling=1.0/vscaling;
 
-	    //
-	    	js_bsize = opt.Bsize_sub;
-	    	treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],js_bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
-		while(1){
-			if(treeomp[tid]->GetNumLeafNodes() < opt.MaxLeafNodes){
-			       	if(treeomp[tid]->GetNumLeafNodes() > opt.MinLeafNodes) break;
-				if(treeomp[tid]->GetNumLeafNodes() < opt.MinLeafNodes && numingroup[i] < 1000000) break;
-			}
-			if(treeomp[tid]->GetNumLeafNodes() > opt.MaxLeafNodes) js_bsize = js_bsize * 2;
-			if(numingroup[i] > 1000000 && treeomp[tid]->GetNumLeafNodes() < opt.MinLeafNodes) js_bsize = js_bsize / 2;
-			treeomp[tid] = new KDTree(&(Part.data()[noffset[i]]),numingroup[i],js_bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
-		}
-	    //
-	    
+	    treeomp[tid]=new KDTree(js_npart, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize_sub,treeomp[tid]->TPHS,tree->KEPAN,100);
+	   
+	    js_time2 = MyGetTime();
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
-	    if(MyGetTime() - js_time > 100.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<treeomp[tid]->GetNumLeafNodes()<<" / "<<ngomp[i]<<" / "<<MyGetTime() - js_time<<"    -     "<<Part[noffset[i]].GetPosition(0)<<" // "<<Part[noffset[i]].GetPosition(1)<<" // "<<Part[noffset[i]].GetPosition(2)<<endl;
+
+	    js_nstep++;
+	    if(MyGetTime() - js_time > 100.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<js_nstep<<" of "<<iend<<" // "<<numingroup[i]<<" // "<<opt.Bsize_sub<<" // "<<treeomp[tid]->GetNumLeafNodes()<<" / "<<ngomp[i]<<" / "<<MyGetTime() - js_time<<" // FOF - "<<MyGetTime() - js_time2<<endl;
+
             delete treeomp[tid];
             for (Int_t j=0;j<numingroup[i];j++) {
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
@@ -1115,7 +1120,11 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
         cout<<"FOF6DCORE which identifies phase-space dense regions and assigns particles, ie core identification and growth\n";
         }
         //just build tree and initialize the pfof array
-        tree=new KDTree(Partsubset,nsubset,opt.Bsize_sub,tree->TPHYS);
+	//cout<<"		Before Tree / "<<omp_get_thread_num()<<endl;
+        //tree=new KDTree(0.0, param, Partsubset,nsubset,opt.Bsize_sub2,tree->TPHYS);
+	//cout<<"%123123 ParameterCheck	Params in making Tree : "<<param[1]<<" / "<<param[2]<<" / "<<param[6]<<" / "<<param[7]<<" / "<<endl;
+        tree=new KDTree(0.0, param, Partsubset,nsubset,opt.Bsize_sub2,tree->TPHS);
+	//cout<<"		Tree Done / "<<omp_get_thread_num()<<endl;
         numgroups=0;
         pfof=new Int_t[nsubset];
         for (i=0;i<nsubset;i++) pfof[i]=0;
@@ -1123,7 +1132,8 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
     //@}
     //now actually search for dynamically distinct substructures
     //@{
-    if (!(opt.foftype==FOFSTPROBNN||opt.foftype==FOFSTPROBNNLX||opt.foftype==FOFSTPROBNNNODIST||opt.foftype==FOF6DCORE)) {
+    if (!(opt.foftype==FOFSTPROBNN||opt.foftype==FOFSTPROBNNLX||opt.foftype==FOFSTPROBNNNODIST||opt.foftype==FOF6DCORE)) 
+    {
         if (opt.iverbose>=2) cout<<"Building tree ... "<<endl;
         tree=new KDTree(Partsubset,nsubset,opt.Bsize_sub,tree->TPHYS);
         param[0]=tree->GetTreeType();
@@ -1403,6 +1413,7 @@ private(i,tid)
     }
     if (numgroups>0) if (opt.iverbose>=2) cout<<ThisTask<<": "<<numgroups<<" substructures found"<<endl;
     else {if (opt.iverbose>=2) cout<<ThisTask<<": "<<"NO SUBSTRUCTURES FOUND"<<endl;}
+
 
     //now search particle list for large compact substructures that are considered part of the background when using smaller grids
     if (nsubset>=MINSUBSIZE && opt.iLargerCellSearch && opt.foftype!=FOF6DCORE)
@@ -1695,7 +1706,22 @@ private(i,tid)
         for (i=0;i<nsubset;i++) Partsubset[i].SetPotential(pfof[Partsubset[i].GetID()]);
         for (i=0;i<nsubset;i++) Partsubset[i].SetType(-1);
         param[9]=0.5;
+
+	//--JS--
+	//
+	//In 6DCore case, making tree with using the new parameter sets
+	
+	if(opt.foftype==FOF6DCORE){
+		delete tree;
+        	tree=new KDTree(0.0, param, Partsubset,nsubset,opt.Bsize_sub2,tree->TPHS);
+        	//numgroups=0;
+        	//pfof=new Int_t[nsubset];
+        	//for (i=0;i<nsubset;i++) pfof[i]=0;
+        	param[0]=tree->GetTreeType();
+	}
+	//cout<<"		Before FOF / "<<tree->GetNumLeafNodes()<<endl;
         pfofbg=tree->FOFCriterion(fofcmp,param,numgroupsbg,minsize,iorder,icheck,FOFcheckbg);
+	//cout<<"		After FOF / "<<omp_get_thread_num()<<endl;
 
         for (i=0;i<nsubset;i++) if (pfofbg[Partsubset[i].GetID()]<=1 && pfof[Partsubset[i].GetID()]==0) Partsubset[i].SetType(numactiveloops);
 
@@ -1742,6 +1768,13 @@ private(i,tid)
                 //we adjust the particles potentials so as to ignore already tagged particles using FOFcheckbg
                 //here since loop just iterates to search the largest core, we just set all previously tagged particles not belonging to main core as 1
                 for (i=0;i<nsubset;i++) Partsubset[i].SetPotential((pfofbgnew[Partsubset[i].GetID()]!=1)+(pfof[Partsubset[i].GetID()]>0));
+
+		// -- JS --
+		// Remake Tree again to modify farthest distances
+		delete tree;
+        	tree=new KDTree(0.0, param, Partsubset,nsubset,opt.Bsize_sub2,tree->TPHS);
+        	param[0]=tree->GetTreeType();
+		cout<<"			Core Searching / "<<omp_get_thread_num()<<" / "<<numloops<<" of "<<opt.halocorenumloops<<" / # : "<<nsubset<<endl;
                 pfofbg=tree->FOFCriterion(fofcmp,param,numgroupsbg,minsize,iorder,icheck,FOFcheckbg);
                 //now if numgroupsbg is greater than one, need to update the pfofbgnew array
                 if (numgroupsbg>1) {
@@ -2691,7 +2724,7 @@ inline void PreCalcSearchSubSet(Options &opt, Int_t subnumingroup,  Particle *&s
     Coordinate *gvel;
     Matrix *gveldisp;
 
-    if (opt.iverbose) cout<< ThisTask<<" Substructure at sublevel "<<sublevel<<" with "<<subnumingroup
+    if (opt.iverbose) cout<< ThisTask<<" / "<<omp_get_thread_num()<<" Substructure at sublevel "<<sublevel<<" with "<<subnumingroup
         <<" particles"<<endl;
     if (subnumingroup>=MINSUBSIZE&&opt.foftype!=FOF6DCORE) {
         //now if object is large enough for phase-space decomposition and search, compare local field to bg field
@@ -2960,16 +2993,21 @@ void SearchSubSub(Options &opt, const Int_t nsubset, vector<Particle> &Partsubse
             ns+=subngroup[i];
         }
 
-
+	double js_time[5];
+	int js_nstep = 0, tid;
 #ifdef USEOPENMP
         if (ompactivesubgroups.size()>0) {
             Int_t oldns = ns;
             ns = 0;
             Options opt2;
             #pragma omp parallel for \
-            default(shared) private(subPart, subpfof, opt2) schedule(dynamic) \
+            default(shared) private(subPart, subpfof, opt2, js_time, tid) schedule(dynamic) \
             reduction(+:ns)
             for (auto iomp=0;iomp<ompactivesubgroups.size();iomp++) {
+		    //if(iomp<500) continue;
+		js_time[0] = MyGetTime();
+		tid = omp_get_thread_num();
+
                 Int_t i=ompactivesubgroups[iomp];
                 opt2 = opt;
                 subpfofold[i] = pfof[subpglist[i][0]];
@@ -2982,11 +3020,17 @@ void SearchSubSub(Options &opt, const Int_t nsubset, vector<Particle> &Partsubse
                     AdjustSubPartToPhaseCM(subnumingroup[i], subPart, cmphase);
                 }
                 PreCalcSearchSubSet(opt2, subnumingroup[i], subPart, sublevel);
+		js_time[1] = MyGetTime();
                 subpfof = SearchSubset(opt2, subnumingroup[i], subnumingroup[i], subPart,
                     subngroup[i], sublevel, &numcores[i]);
+		js_time[2] = MyGetTime();
                 CleanAndUpdateGroupsFromSubSearch(opt2, subnumingroup[i], subPart, subpfof,
                         subngroup[i], subsubnumingroup[i], subsubpglist[i], numcores[i],
                         subpglist[i], pfof, ngroup, ngroupidoffset_old[i]);
+		js_time[3] = MyGetTime();
+		js_nstep++;
+	    	if(js_time[3] - js_time[0] > 100.) cout<<"%123123 - ["<<tid<<"] "<<i<<" // "<<js_nstep<<" of "<<ompactivesubgroups.size()<<" // "<<subnumingroup[i]<<" // "<<subngroup[i]<<" // All: "<<js_time[3] - js_time[0]<<" /PRECAL: "<<js_time[1] - js_time[0]<<" /FOF: "<<js_time[2] - js_time[1]<<" /Clean: "<<js_time[3] - js_time[2]<<endl;
+		//cout<<"		ALLDONE / "<<omp_get_thread_num()<<endl;
                 delete[] subpfof;
                 delete[] subPart;
                 ns += subngroup[i];

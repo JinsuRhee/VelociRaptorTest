@@ -29,7 +29,8 @@ Pro read_nml, settings, file=file
 	ENDIF
 
 	IF settings.simname EQ 'NH' THEN BEGIN
-		dir_catalog     = '/storage5/FORNAX/VELOCI_RAPTOR/' + STRTRIM(settings.cname,2) + '/galaxy/'
+		;dir_catalog     = '/storage5/FORNAX/VELOCI_RAPTOR/' + STRTRIM(settings.cname,2) + '/galaxy/'
+		dir_catalog	= '/storage6/jinsu/NH/galaxy/'
 		dir_raw         = '/storage1/NewHorizon/snapshots/'
 		dir_save        = '/storage1/NewHorizon/Vraptor/'
 	ENDIF

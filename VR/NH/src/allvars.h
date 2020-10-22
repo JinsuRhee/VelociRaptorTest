@@ -456,7 +456,7 @@ struct Options
     ///\name parameters that control the local and average volumes used to calculate the local velocity density and the mean field, also the size of the leafnode in the kd-tree used when searching the tree for fof neighbours
     //@{
     int iLocalVelDenApproxCalcFlag;
-    int Nvel, Nsearch, Bsize, Bsize_sub, MaxLeafNodes, MinLeafNodes;
+    int Nvel, Nsearch, Bsize, Bsize_sub, Bsize_sub2, MaxLeafNodes, MinLeafNodes;
     Int_t Ncell;
     Double_t Ncellfac;
     //@}
@@ -927,8 +927,9 @@ struct Options
 
         fname=outname=smname=pname=gname=outname=NULL;
 
-        Bsize=1024;
+        Bsize=32;
 	Bsize_sub=32;
+	Bsize_sub2=32;
 	MaxLeafNodes=20000;
 	MinLeafNodes=2000;
         Nvel=32;

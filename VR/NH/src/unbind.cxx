@@ -281,7 +281,7 @@ int CheckUnboundGroups(Options opt, const long long nbodies, Particle *Part, Int
     int ThisTask=0,NProcs=1;
 #endif
 
-    if (opt.iverbose) cout<<ThisTask<<" Unbinding "<<ngroup<<" groups  ... "<<endl;
+    if (opt.iverbose) cout<<ThisTask<<" - ["<<omp_get_thread_num()<<"] Unbinding "<<ngroup<<" groups  ... "<<endl;
 
     //array creation check.
     if (numingroup==NULL) ningflag=true;
@@ -376,7 +376,7 @@ int CheckUnboundGroups(Options opt, const long long nbodies, Particle *Part, Int
     if (pglistflag) {for (Int_t i=1;i<=ng;i++) delete[] pglist[i];delete[] pglist;}
     if (ningflag) delete[] numingroup;
 
-    if (opt.iverbose) cout<<ThisTask<<" Done. Number of groups remaining "<<ngroup<<" in "<<MyGetTime()-time1<<endl;
+    if (opt.iverbose) cout<<ThisTask<<" - ["<<omp_get_thread_num()<<"] Done. Number of groups remaining "<<ngroup<<" in "<<MyGetTime()-time1<<endl;
 
     return iflag;
 }
@@ -788,7 +788,6 @@ int Unbind(Options &opt, Particle **gPart, Int_t &numgroups, Int_t *numingroup, 
         }
         #endif
     }
-
     //if calculate potential
     CalculatePotentials(opt, gPart, numgroups, numingroup);
 
@@ -801,7 +800,7 @@ int Unbind(Options &opt, Particle **gPart, Int_t &numgroups, Int_t *numingroup, 
     //for large groups, paralleize over particle, for small groups parallelize over groups
     //here energy data is stored in density
 #ifdef USEOPENMP
-#pragma omp parallel default(shared)  \
+#pragma omp parallel default(shared) num_threads(1) \
 private(i,j,k,n,maxE,maxunbindsize,nEplus,nEplusid,Eplusflag,v2,Ti,unbindcheck,Efrac,nEfrac,nunbound,r2,poti,unbindloops,sortflag,oldnumingroup)
 {
     #pragma omp for schedule(dynamic) nowait reduction(+:iunbindflag)
@@ -1078,6 +1077,7 @@ void Potential(Options &opt, long long nbodies, Particle *Part)
     //Double_t **nnr2;
     KDTree *tree;
     bool runomp = false;
+    Double_t js_time = MyGetTime();
 
     //for parallel environment store maximum number of threads
     nthreads=1;
@@ -1092,6 +1092,7 @@ void Potential(Options &opt, long long nbodies, Particle *Part)
     //here openmp is per group since each group is large
     //to make this memory efficient really need just KDTree that uses Coordinates
     tree=new KDTree(Part,nbodies,opt.uinfo.BucketSize,tree->TPHYS, tree->KEPAN,100,0,0,0,NULL,NULL,runomp);
+
     ncell=tree->GetNumNodes();
     root=tree->GetRoot();
     //to store particles in a given node
