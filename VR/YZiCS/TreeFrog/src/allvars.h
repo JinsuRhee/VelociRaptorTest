@@ -231,11 +231,13 @@ using namespace NBody;
 #ifdef TREEFROGLONGIDS
 typedef long long IDTYPE;
 #elif defined(TREEFROGLONGUIDS)
-typedef long unsigned IDTYPE;
+///typedef long unsigned IDTYPE;
+typedef long
 #elif defined(TREEFROGINTIDS)
 typedef int IDTYPE;
 #else
-typedef int unsigned IDTYPE;
+//typedef int unsigned IDTYPE;
+typedef int
 #endif
 
 /// Options structure stores useful variables that have user determined values which are altered by \ref GetArgs in \ref ui.cxx
@@ -253,7 +255,7 @@ struct Options
     ///nubmer of steps integrated over to find links (two steps needs three snapshots)
     int numsteps;
     ///maximum id value, used to allocate an array of this size so that ids can be mapped to an index and thus easily accessible.
-    long unsigned MaxIDValue;
+    long long MaxIDValue;
     ///total number of haloes across all snapshots
     long unsigned TotalNumberofHalos;
     ///read halo positions

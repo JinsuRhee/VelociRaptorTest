@@ -354,11 +354,15 @@ void IDcheck(Options &opt, HaloTreeData *&pht){
         ierrorflag=0;
         for (Int_t j=0;j<pht[i].numhalos;j++) {
             for (Int_t k=0;k<pht[i].Halo[j].NumberofParticles;k++)
-                if (pht[i].Halo[j].ParticleID[k]<0||pht[i].Halo[j].ParticleID[k]>opt.MaxIDValue) {
+                //if (pht[i].Halo[j].ParticleID[k]<0||pht[i].Halo[j].ParticleID[k]>opt.MaxIDValue) {
+                if (pht[i].Halo[j].ParticleID[k]>opt.MaxIDValue) {
                     cout<<ThisTask<<" snapshot "<<i<<" particle id out of range "<<pht[i].Halo[j].ParticleID[k]<<" not in [0,"<<opt.MaxIDValue<<")"<<endl;
                     ierrorflag=1;
                     break;
                 }
+
+	    //For Negative ID in NH
+	    for (Int_t k=0;k<pht[i].Halo[j].NumberofParticles;k++) if (pht[i].Halo[j].ParticleID[k]<0) pht[i].Halo[j].ParticleID[k] += opt.MaxIDValue;
             if (ierrorflag==1) {ierrorsumflag+=1;break;}
         }
 #ifdef USEMPI
