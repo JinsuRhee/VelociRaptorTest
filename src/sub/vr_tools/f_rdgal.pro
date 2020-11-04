@@ -38,18 +38,19 @@ FUNCTION f_rdgal, settings, n_snap, Gprop, mrange=mrange, id=id, bound=bound
 	cut	= where(mdum ge mrange(0) and mdum le mrange(1))
 	nn	= n_elements(cut)
 
-	For i=0L, n_elements(Gprop) - 1L DO BEGIN
-		tmp	= Gprop(i) + ' = dblarr(nn)'
-		if Gprop(i) eq 'ID' then $
-		       tmp = Gprop(i) + ' = lonarr(nn)'
+	For ind=0L, n_elements(Gprop) - 1L DO BEGIN
+		tmp	= Gprop(ind) + ' = dblarr(nn)'
+		if Gprop(ind) eq 'ID' OR Gprop(ind) EQ 'ID_mbp' then $
+		       tmp = Gprop(ind) + ' = lonarr(nn)'
 
-		if Gprop(i) eq 'ABmag' then $
-		       tmp = Gprop(i) + $
+		if Gprop(ind) eq 'ABmag' then $
+		       tmp = Gprop(ind) + $
 		       ' = dblarr(nn, n_elements(settings.flux_list), n_elements(settings.P_VRrun_mag_r))'
 
-		IF Gprop(i) eq 'SFR' then $
-			tmp = Gprop(i) + $
+		IF Gprop(ind) eq 'SFR' then $
+			tmp = Gprop(ind) + $
 			' = dblarr(nn, n_elements(settings.P_VRrun_SFR_t))'
+
 		void	= execute(tmp)
 	EndFor
 
