@@ -2,7 +2,8 @@ FUNCTION f_rdptcl, settings, gid, $
 	p_pos=p_pos, p_vel=p_vel, p_gyr=p_gyr, p_sfactor=p_sfactor, $
 	p_mass=p_mass, p_flux=p_flux, p_metal=p_metal, $
 	flux_list=flux_list, $
-	num_thread=num_thread, n_snap=n_snap, longint=longint, raw=raw, yzics=yzics, alldom=alldom
+	num_thread=num_thread, n_snap=n_snap, longint=longint, raw=raw, yzics=yzics, alldom=alldom, $
+	boxrange=boxrange
 
 	;;-----
 	;; Settings
@@ -80,7 +81,7 @@ FUNCTION f_rdptcl, settings, gid, $
 			larr(2) = num_thread
 
 			darr(0) = 50.
-
+			IF KEYWORD_SET(boxrange) THEN darr(0) = boxrange / Rsize
 		void	= CALL_EXTERNAL(ftr_name, 'find_domain', $
 			xc, yc, zc, Rsize, siminfo.hindex, siminfo.levmax, dom_list2, larr, darr)
 

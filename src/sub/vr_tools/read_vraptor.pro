@@ -10,6 +10,7 @@ function read_vraptor, $
 	SFR_T=SFR_t, SFR_R=SFR_r, MAG_R=MAG_r, $
 	alltype=alltype, longint=longint, yzics=yzics
 
+
 ;+)
 ;
 ;	dir_catalog:
