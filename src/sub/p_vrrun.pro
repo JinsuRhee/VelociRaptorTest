@@ -10,6 +10,7 @@ Pro p_VRrun, settings
 			settings.dir_catalog_pre + $
 			string(n_snap,format='(I3.3)') + $
 			settings.dir_catalog_suf + '/'
+		IF STRLEN(FILE_SEARCH(Dir_catalog)) LE 5 THEN CONTINUE
 		tmp	= 'void = read_vraptor(' + $
 			'Dir_catalog    = dir_catalog,' + $
 			'Dir_raw	= Settings.dir_raw,' + $
@@ -42,7 +43,6 @@ Pro p_VRrun, settings
 		IF(STRLEN(Settings.P_VRrun_skip(0)) GE 4L) THEN $
 		for j=0L, n_elements(Settings.P_VRrun_skip) - 1L do $
 			tmp = tmp + ', /' + strtrim(Settings.P_VRrun_skip(j),2)
-
 		tmp	= tmp + ')'
 		void	= execute(tmp)
 		print, '      ----- ', i, ' / ', MAX([N1,N2])

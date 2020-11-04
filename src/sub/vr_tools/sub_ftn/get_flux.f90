@@ -6,7 +6,7 @@
       implicit none
       integer(kind=4) :: int_set(20)
       integer(kind=4) :: i, j, k, l, m
-      integer(kind=4) :: ind_a, ind_a2, ind_z, ind_z2
+      integer(kind=4) :: ind_a, ind_a2, ind_z, ind_z2, ind_a0
       real(kind=4) :: age(int_set(1)), metal(int_set(1))
       real(kind=8) :: mass(int_set(1)), flux(int_set(1))
       real(kind=4) :: SSP_age(int_set(2)), SSP_metal(int_set(3)), SSP_wave(int_set(4))
@@ -37,7 +37,7 @@
       !!-----
 
       call Ext_ind(SSP_wave, TR_wave, N_SSP_wav, N_Tr, ind_a, ind_z)
-      R_N_SSP = ind_z - ind_a + 1 ; ind_a2 = ind_a
+      R_N_SSP = ind_z - ind_a + 1 ; ind_a0 = ind_a
 
       !!-----
       !! Memory allocation for reduced SSP arrays
@@ -63,7 +63,7 @@
       !! Main Loop for ptcls
       !!-----
 
-      !$OMP PARALLEL DO default(shared) private(ind_a, ind_z, ind_z2, bi_int, frac, R_SSP_Fl) schedule(static)
+      !$OMP PARALLEL DO default(shared) private(ind_a, ind_a2, ind_z, ind_z2, bi_int, frac, R_SSP_Fl) schedule(static)
       do i=1, N_part
         !!!!-----
         !!!! Extract indices of metallicity and ages
@@ -72,12 +72,15 @@
         ind_z = Ext_ind2(SSP_metal, metal(i), N_SSP_met)
         ind_a = Ext_ind2(SSP_age, age(i), N_SSP_age)
 
-        bi_int(4) = SSP_age(ind_a) ; bi_int(5) = SSP_age(ind_a + 1) ; bi_int(6) = age(i)
+          ind_a2 = ind_a
+          if(ind_a .eq. 0) ind_a2 = 1
+          if(ind_a .eq. N_SSP_age) ind_a2 = ind_a2 - 1
 
           ind_z2 = ind_z
           if(ind_z .eq. 0) ind_z2 = 1
           if(ind_z .eq. N_SSP_met) ind_z2 = ind_z - 1
 
+        bi_int(4) = SSP_age(ind_a2) ; bi_int(5) = SSP_age(ind_a2 + 1) ; bi_int(6) = age(i)
         bi_int(1) = SSP_metal(ind_z2) ; bi_int(2) = SSP_metal(ind_z2 + 1) ; bi_int(3) = metal(i)
 
         if(bi_int(1) .eq. bi_int(3)) bi_int(3) = bi_int(3) + 1e-6
@@ -94,10 +97,10 @@
 
         do j=1, R_N_SSP
           R_SSP_Fl(j) = 0.
-          R_SSP_Fl(j) = (SSP_flux(ind_z2, ind_a2-1+j, ind_a)*frac(2) + &
-              SSP_flux(ind_z2+1, ind_a2-1+j, ind_a)*frac(1))*frac(4) + &
-              (SSP_flux(ind_z2, ind_a2-1+j, ind_a+1)*frac(2) + &
-              SSP_flux(ind_z2+1, ind_a2-1+j, ind_a+1)*frac(1))*frac(3)
+          R_SSP_Fl(j) = (SSP_flux(ind_z2, ind_a0-1+j, ind_a2)*frac(2) + &
+              SSP_flux(ind_z2+1, ind_a0-1+j, ind_a2)*frac(1))*frac(4) + &
+              (SSP_flux(ind_z2, ind_a0-1+j, ind_a2+1)*frac(2) + &
+              SSP_flux(ind_z2+1, ind_a0-1+j, ind_a2+1)*frac(1))*frac(3)
         enddo
 
         !!!!-----
@@ -115,6 +118,7 @@
 
       enddo
       !$OMP END PARALLEL DO
+
       Return
       End Subroutine
 

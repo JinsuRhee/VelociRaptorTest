@@ -24,10 +24,10 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
         yc      = dblarr(n_elements(output.id))
         zc      = dblarr(n_elements(output.id))
         rr      = dblarr(n_elements(output.id))
-        for i=0L, n_elements(xc)-1L do xc(i) = output.xc(i)  * 3.08d21 / siminfo.unit_l
-        for i=0L, n_elements(yc)-1L do yc(i) = output.yc(i)  * 3.08d21 / siminfo.unit_l
-        for i=0L, n_elements(zc)-1L do zc(i) = output.zc(i)  * 3.08d21 / siminfo.unit_l
-        for i=0L, n_elements(rr)-1L do rr(i) = output.r_halfmass(i)* 3.08d21 / siminfo.unit_l
+        for i=0L, n_elements(xc)-1L do xc(i) = output.xc(i)  * 3.086d21 / siminfo.unit_l
+        for i=0L, n_elements(yc)-1L do yc(i) = output.yc(i)  * 3.086d21 / siminfo.unit_l
+        for i=0L, n_elements(zc)-1L do zc(i) = output.zc(i)  * 3.086d21 / siminfo.unit_l
+        for i=0L, n_elements(rr)-1L do rr(i) = output.r_halfmass(i)* 3.086d21 / siminfo.unit_l
 	rr	= rr*0.0 + MEDIAN(rr)
 
 	rate	= FLTARR(N_ELEMENTS(output.id))
@@ -50,6 +50,7 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 	N_itr = 0L & N_itrmax = 10L & dfact = 10.0
 
 	dmp_mass	= 1./(4096.^3) * (siminfo.omega_m - siminfo.omega_b) / siminfo.omega_m
+	IF KEYWORD_SET(yzics) THEN dmp_mass = 1./(2048.^3) * (siminfo.omega_m - siminfo.omega_b) / siminfo.omega_m
 	REPEAT BEGIN
 		cut	= WHERE(rate LT match_cutval)
 

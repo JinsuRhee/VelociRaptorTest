@@ -61,7 +61,7 @@
         threadnum = OMP_GET_THREAD_NUM()
         IF(threadnum .EQ. 1) THEN
                 js_order = js_order+1
-                PRINT *, js_order, ' // ', n_mpi / n_thread
+                !PRINT *, js_order, ' // ', n_mpi / n_thread
         ENDIF
 
         !!-----
