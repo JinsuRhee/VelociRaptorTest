@@ -81,7 +81,8 @@ FUNCTION f_rdptcl, settings, gid, $
 			larr(2) = num_thread
 
 			darr(0) = 50.
-			IF KEYWORD_SET(boxrange) THEN darr(0) = boxrange / Rsize
+			IF KEYWORD_SET(boxrange) THEN darr(0) = boxrange / (Rsize * siminfo.unit_l / 3.086d21)
+
 		void	= CALL_EXTERNAL(ftr_name, 'find_domain', $
 			xc, yc, zc, Rsize, siminfo.hindex, siminfo.levmax, dom_list2, larr, darr)
 
