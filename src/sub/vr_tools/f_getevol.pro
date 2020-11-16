@@ -31,7 +31,7 @@ FUNCTION f_getevol, settings, id0, n0, horg=horg, abmag=abmag, sfr=sfr
 	;; Read one galaxy for making a data structure
 	;;-----
 
-	GAL	= f_rdgal(settings, n0, datalist,  id=1L)
+	GAL	= f_rdgal(settings, n0, datalist, id=1L)
 
 	;;-----
 	;; Memory Allocate
