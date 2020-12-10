@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/stf.dir/main.cxx.o"
-  "../stf.pdb"
   "../stf"
+  "../stf.pdb"
+  "CMakeFiles/stf.dir/main.cxx.o"
 )
 
 # Per-language clean rules from dependency scanning.

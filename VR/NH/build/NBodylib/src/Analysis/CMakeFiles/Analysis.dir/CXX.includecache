@@ -450,7 +450,7 @@ iostream
 NBody.h
 -
 
-/usr/local/include/gsl/gsl_blas.h
+/home/jinsu/gsl/gsl/gsl_blas.h
 gsl/gsl_vector.h
 -
 gsl/gsl_matrix.h
@@ -458,115 +458,115 @@ gsl/gsl_matrix.h
 gsl/gsl_blas_types.h
 -
 
-/usr/local/include/gsl/gsl_blas_types.h
+/home/jinsu/gsl/gsl/gsl_blas_types.h
 gsl/gsl_cblas.h
 -
 
-/usr/local/include/gsl/gsl_block_char.h
+/home/jinsu/gsl/gsl/gsl_block_char.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_complex_double.h
+/home/jinsu/gsl/gsl/gsl_block_complex_double.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_complex_float.h
+/home/jinsu/gsl/gsl/gsl_block_complex_float.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_complex_long_double.h
+/home/jinsu/gsl/gsl/gsl_block_complex_long_double.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_double.h
+/home/jinsu/gsl/gsl/gsl_block_double.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_float.h
+/home/jinsu/gsl/gsl/gsl_block_float.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_int.h
+/home/jinsu/gsl/gsl/gsl_block_int.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_long.h
+/home/jinsu/gsl/gsl/gsl_block_long.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_long_double.h
+/home/jinsu/gsl/gsl/gsl_block_long_double.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_short.h
+/home/jinsu/gsl/gsl/gsl_block_short.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_uchar.h
+/home/jinsu/gsl/gsl/gsl_block_uchar.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_uint.h
+/home/jinsu/gsl/gsl/gsl_block_uint.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_ulong.h
+/home/jinsu/gsl/gsl/gsl_block_ulong.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_block_ushort.h
+/home/jinsu/gsl/gsl/gsl_block_ushort.h
 stdlib.h
 -
 gsl/gsl_errno.h
 -
 
-/usr/local/include/gsl/gsl_cblas.h
+/home/jinsu/gsl/gsl/gsl_cblas.h
 stddef.h
 -
 
-/usr/local/include/gsl/gsl_cdf.h
+/home/jinsu/gsl/gsl/gsl_cdf.h
 
-/usr/local/include/gsl/gsl_check_range.h
+/home/jinsu/gsl/gsl/gsl_check_range.h
 stdlib.h
 -
 gsl/gsl_types.h
 -
 
-/usr/local/include/gsl/gsl_complex.h
+/home/jinsu/gsl/gsl/gsl_complex.h
 
-/usr/local/include/gsl/gsl_eigen.h
+/home/jinsu/gsl/gsl/gsl_eigen.h
 gsl/gsl_vector.h
 -
 gsl/gsl_matrix.h
 -
 
-/usr/local/include/gsl/gsl_errno.h
+/home/jinsu/gsl/gsl/gsl_errno.h
 stdio.h
 -
 errno.h
@@ -574,15 +574,15 @@ errno.h
 gsl/gsl_types.h
 -
 
-/usr/local/include/gsl/gsl_inline.h
+/home/jinsu/gsl/gsl/gsl_inline.h
 
-/usr/local/include/gsl/gsl_integration.h
+/home/jinsu/gsl/gsl/gsl_integration.h
 stdlib.h
 -
 gsl/gsl_math.h
 -
 
-/usr/local/include/gsl/gsl_interp.h
+/home/jinsu/gsl/gsl/gsl_interp.h
 stdlib.h
 -
 gsl/gsl_inline.h
@@ -590,7 +590,7 @@ gsl/gsl_inline.h
 gsl/gsl_types.h
 -
 
-/usr/local/include/gsl/gsl_linalg.h
+/home/jinsu/gsl/gsl/gsl_linalg.h
 stdlib.h
 -
 gsl/gsl_mode.h
@@ -608,13 +608,13 @@ gsl/gsl_inline.h
 gsl/gsl_blas.h
 -
 
-/usr/local/include/gsl/gsl_machine.h
+/home/jinsu/gsl/gsl/gsl_machine.h
 limits.h
 -
 float.h
 -
 
-/usr/local/include/gsl/gsl_math.h
+/home/jinsu/gsl/gsl/gsl_math.h
 math.h
 -
 gsl/gsl_sys.h
@@ -632,7 +632,7 @@ gsl/gsl_pow_int.h
 gsl/gsl_minmax.h
 -
 
-/usr/local/include/gsl/gsl_matrix.h
+/home/jinsu/gsl/gsl/gsl_matrix.h
 gsl/gsl_matrix_complex_long_double.h
 -
 gsl/gsl_matrix_complex_double.h
@@ -662,7 +662,7 @@ gsl/gsl_matrix_uchar.h
 gsl/gsl_matrix_char.h
 -
 
-/usr/local/include/gsl/gsl_matrix_char.h
+/home/jinsu/gsl/gsl/gsl_matrix_char.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -675,8 +675,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_char.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_complex_double.h
+/home/jinsu/gsl/gsl/gsl_matrix_complex_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -689,8 +691,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_complex_double.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_complex_float.h
+/home/jinsu/gsl/gsl/gsl_matrix_complex_float.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -703,8 +707,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_complex_float.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_complex_long_double.h
+/home/jinsu/gsl/gsl/gsl_matrix_complex_long_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -717,8 +723,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_complex_long_double.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_double.h
+/home/jinsu/gsl/gsl/gsl_matrix_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -731,8 +739,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_double.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_float.h
+/home/jinsu/gsl/gsl/gsl_matrix_float.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -745,8 +755,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_float.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_int.h
+/home/jinsu/gsl/gsl/gsl_matrix_int.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -759,8 +771,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_int.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_long.h
+/home/jinsu/gsl/gsl/gsl_matrix_long.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -773,8 +787,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_long.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_long_double.h
+/home/jinsu/gsl/gsl/gsl_matrix_long_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -787,8 +803,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_long_double.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_short.h
+/home/jinsu/gsl/gsl/gsl_matrix_short.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -801,8 +819,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_short.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_uchar.h
+/home/jinsu/gsl/gsl/gsl_matrix_uchar.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -815,8 +835,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_uchar.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_uint.h
+/home/jinsu/gsl/gsl/gsl_matrix_uint.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -829,8 +851,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_uint.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_ulong.h
+/home/jinsu/gsl/gsl/gsl_matrix_ulong.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -843,8 +867,10 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_ulong.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_matrix_ushort.h
+/home/jinsu/gsl/gsl/gsl_matrix_ushort.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -857,18 +883,20 @@ gsl/gsl_check_range.h
 -
 gsl/gsl_vector_ushort.h
 -
+gsl/gsl_blas_types.h
+-
 
-/usr/local/include/gsl/gsl_minmax.h
+/home/jinsu/gsl/gsl/gsl_minmax.h
 gsl/gsl_inline.h
 -
 
-/usr/local/include/gsl/gsl_mode.h
+/home/jinsu/gsl/gsl/gsl_mode.h
 gsl/gsl_inline.h
 -
 
-/usr/local/include/gsl/gsl_monte.h
+/home/jinsu/gsl/gsl/gsl_monte.h
 
-/usr/local/include/gsl/gsl_monte_miser.h
+/home/jinsu/gsl/gsl/gsl_monte_miser.h
 gsl/gsl_rng.h
 -
 gsl/gsl_monte.h
@@ -876,7 +904,7 @@ gsl/gsl_monte.h
 gsl/gsl_monte_plain.h
 -
 
-/usr/local/include/gsl/gsl_monte_plain.h
+/home/jinsu/gsl/gsl/gsl_monte_plain.h
 stdio.h
 -
 gsl/gsl_monte.h
@@ -884,7 +912,7 @@ gsl/gsl_monte.h
 gsl/gsl_rng.h
 -
 
-/usr/local/include/gsl/gsl_monte_vegas.h
+/home/jinsu/gsl/gsl/gsl_monte_vegas.h
 stdlib.h
 -
 gsl/gsl_rng.h
@@ -892,7 +920,7 @@ gsl/gsl_rng.h
 gsl/gsl_monte.h
 -
 
-/usr/local/include/gsl/gsl_multifit_nlinear.h
+/home/jinsu/gsl/gsl/gsl_multifit_nlinear.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -906,9 +934,9 @@ gsl/gsl_matrix.h
 gsl/gsl_permutation.h
 -
 
-/usr/local/include/gsl/gsl_nan.h
+/home/jinsu/gsl/gsl/gsl_nan.h
 
-/usr/local/include/gsl/gsl_permutation.h
+/home/jinsu/gsl/gsl/gsl_permutation.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -920,15 +948,15 @@ gsl/gsl_inline.h
 gsl/gsl_check_range.h
 -
 
-/usr/local/include/gsl/gsl_pow_int.h
+/home/jinsu/gsl/gsl/gsl_pow_int.h
 gsl/gsl_inline.h
 -
 
-/usr/local/include/gsl/gsl_precision.h
+/home/jinsu/gsl/gsl/gsl_precision.h
 gsl/gsl_types.h
 -
 
-/usr/local/include/gsl/gsl_randist.h
+/home/jinsu/gsl/gsl/gsl_randist.h
 gsl/gsl_rng.h
 -
 gsl/gsl_vector.h
@@ -936,7 +964,7 @@ gsl/gsl_vector.h
 gsl/gsl_matrix.h
 -
 
-/usr/local/include/gsl/gsl_rng.h
+/home/jinsu/gsl/gsl/gsl_rng.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -946,7 +974,7 @@ gsl/gsl_errno.h
 gsl/gsl_inline.h
 -
 
-/usr/local/include/gsl/gsl_sf.h
+/home/jinsu/gsl/gsl/gsl_sf.h
 gsl/gsl_sf_result.h
 -
 gsl/gsl_sf_airy.h
@@ -1012,13 +1040,13 @@ gsl/gsl_sf_trig.h
 gsl/gsl_sf_zeta.h
 -
 
-/usr/local/include/gsl/gsl_sf_airy.h
+/home/jinsu/gsl/gsl/gsl_sf_airy.h
 gsl/gsl_mode.h
 -
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_bessel.h
+/home/jinsu/gsl/gsl/gsl_sf_bessel.h
 stdlib.h
 -
 gsl/gsl_mode.h
@@ -1028,135 +1056,135 @@ gsl/gsl_precision.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_clausen.h
+/home/jinsu/gsl/gsl/gsl_sf_clausen.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_coulomb.h
+/home/jinsu/gsl/gsl/gsl_sf_coulomb.h
 gsl/gsl_mode.h
 -
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_coupling.h
+/home/jinsu/gsl/gsl/gsl_sf_coupling.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_dawson.h
+/home/jinsu/gsl/gsl/gsl_sf_dawson.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_debye.h
+/home/jinsu/gsl/gsl/gsl_sf_debye.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_dilog.h
+/home/jinsu/gsl/gsl/gsl_sf_dilog.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_elementary.h
+/home/jinsu/gsl/gsl/gsl_sf_elementary.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_ellint.h
+/home/jinsu/gsl/gsl/gsl_sf_ellint.h
 gsl/gsl_mode.h
 -
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_elljac.h
+/home/jinsu/gsl/gsl/gsl_sf_elljac.h
 
-/usr/local/include/gsl/gsl_sf_erf.h
+/home/jinsu/gsl/gsl/gsl_sf_erf.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_exp.h
+/home/jinsu/gsl/gsl/gsl_sf_exp.h
 gsl/gsl_sf_result.h
 -
 gsl/gsl_precision.h
 -
 
-/usr/local/include/gsl/gsl_sf_expint.h
+/home/jinsu/gsl/gsl/gsl_sf_expint.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_fermi_dirac.h
+/home/jinsu/gsl/gsl/gsl_sf_fermi_dirac.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_gamma.h
+/home/jinsu/gsl/gsl/gsl_sf_gamma.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_gegenbauer.h
+/home/jinsu/gsl/gsl/gsl_sf_gegenbauer.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_hermite.h
+/home/jinsu/gsl/gsl/gsl_sf_hermite.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_hyperg.h
+/home/jinsu/gsl/gsl/gsl_sf_hyperg.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_laguerre.h
+/home/jinsu/gsl/gsl/gsl_sf_laguerre.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_lambert.h
+/home/jinsu/gsl/gsl/gsl_sf_lambert.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_legendre.h
+/home/jinsu/gsl/gsl/gsl_sf_legendre.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_log.h
+/home/jinsu/gsl/gsl/gsl_sf_log.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_mathieu.h
+/home/jinsu/gsl/gsl/gsl_sf_mathieu.h
 gsl/gsl_sf_result.h
 -
 gsl/gsl_eigen.h
 -
 
-/usr/local/include/gsl/gsl_sf_pow_int.h
+/home/jinsu/gsl/gsl/gsl_sf_pow_int.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_psi.h
+/home/jinsu/gsl/gsl/gsl_sf_psi.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_result.h
+/home/jinsu/gsl/gsl/gsl_sf_result.h
 
-/usr/local/include/gsl/gsl_sf_sincos_pi.h
+/home/jinsu/gsl/gsl/gsl_sf_sincos_pi.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_synchrotron.h
+/home/jinsu/gsl/gsl/gsl_sf_synchrotron.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_transport.h
+/home/jinsu/gsl/gsl/gsl_sf_transport.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_trig.h
+/home/jinsu/gsl/gsl/gsl_sf_trig.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sf_zeta.h
+/home/jinsu/gsl/gsl/gsl_sf_zeta.h
 gsl/gsl_sf_result.h
 -
 
-/usr/local/include/gsl/gsl_sys.h
+/home/jinsu/gsl/gsl/gsl_sys.h
 
-/usr/local/include/gsl/gsl_types.h
+/home/jinsu/gsl/gsl/gsl_types.h
 
-/usr/local/include/gsl/gsl_vector.h
+/home/jinsu/gsl/gsl/gsl_vector.h
 gsl/gsl_vector_complex_long_double.h
 -
 gsl/gsl_vector_complex_double.h
@@ -1186,7 +1214,7 @@ gsl/gsl_vector_uchar.h
 gsl/gsl_vector_char.h
 -
 
-/usr/local/include/gsl/gsl_vector_char.h
+/home/jinsu/gsl/gsl/gsl_vector_char.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1200,9 +1228,9 @@ gsl/gsl_check_range.h
 gsl/gsl_block_char.h
 -
 
-/usr/local/include/gsl/gsl_vector_complex.h
+/home/jinsu/gsl/gsl/gsl_vector_complex.h
 
-/usr/local/include/gsl/gsl_vector_complex_double.h
+/home/jinsu/gsl/gsl/gsl_vector_complex_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1220,7 +1248,7 @@ gsl/gsl_vector_complex.h
 gsl/gsl_block_complex_double.h
 -
 
-/usr/local/include/gsl/gsl_vector_complex_float.h
+/home/jinsu/gsl/gsl/gsl_vector_complex_float.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1238,7 +1266,7 @@ gsl/gsl_vector_complex.h
 gsl/gsl_block_complex_float.h
 -
 
-/usr/local/include/gsl/gsl_vector_complex_long_double.h
+/home/jinsu/gsl/gsl/gsl_vector_complex_long_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1256,7 +1284,7 @@ gsl/gsl_vector_complex.h
 gsl/gsl_block_complex_long_double.h
 -
 
-/usr/local/include/gsl/gsl_vector_double.h
+/home/jinsu/gsl/gsl/gsl_vector_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1270,7 +1298,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_double.h
 -
 
-/usr/local/include/gsl/gsl_vector_float.h
+/home/jinsu/gsl/gsl/gsl_vector_float.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1284,7 +1312,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_float.h
 -
 
-/usr/local/include/gsl/gsl_vector_int.h
+/home/jinsu/gsl/gsl/gsl_vector_int.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1298,7 +1326,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_int.h
 -
 
-/usr/local/include/gsl/gsl_vector_long.h
+/home/jinsu/gsl/gsl/gsl_vector_long.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1312,7 +1340,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_long.h
 -
 
-/usr/local/include/gsl/gsl_vector_long_double.h
+/home/jinsu/gsl/gsl/gsl_vector_long_double.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1326,7 +1354,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_long_double.h
 -
 
-/usr/local/include/gsl/gsl_vector_short.h
+/home/jinsu/gsl/gsl/gsl_vector_short.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1340,7 +1368,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_short.h
 -
 
-/usr/local/include/gsl/gsl_vector_uchar.h
+/home/jinsu/gsl/gsl/gsl_vector_uchar.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1354,7 +1382,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_uchar.h
 -
 
-/usr/local/include/gsl/gsl_vector_uint.h
+/home/jinsu/gsl/gsl/gsl_vector_uint.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1368,7 +1396,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_uint.h
 -
 
-/usr/local/include/gsl/gsl_vector_ulong.h
+/home/jinsu/gsl/gsl/gsl_vector_ulong.h
 stdlib.h
 -
 gsl/gsl_types.h
@@ -1382,7 +1410,7 @@ gsl/gsl_check_range.h
 gsl/gsl_block_ulong.h
 -
 
-/usr/local/include/gsl/gsl_vector_ushort.h
+/home/jinsu/gsl/gsl/gsl_vector_ushort.h
 stdlib.h
 -
 gsl/gsl_types.h

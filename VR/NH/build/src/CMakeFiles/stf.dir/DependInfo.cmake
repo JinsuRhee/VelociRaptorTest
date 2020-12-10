@@ -14,8 +14,6 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
   "LONGINT"
   "MPIREDUCEMEM"
   "STRUCDEN"
-  "USEHDF"
-  "USEHDFCOMPRESSION"
   "USEMPI"
   "USEOMP"
   "USEOPENMP"
@@ -24,9 +22,8 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../src"
-  "/usr/local/include"
-  "/home/jinsu/intel/compilers_and_libraries_2018.5.274/linux/mpi/intel64/include"
-  "/usr/include/hdf5/serial"
+  "/home/jinsu/gsl"
+  "/usr/local/intel/compilers_and_libraries_2018.3.222/linux/mpi/intel64/include"
   "../NBodylib/src/Analysis"
   "../NBodylib/src/Cosmology"
   "../NBodylib/src/InitCond"

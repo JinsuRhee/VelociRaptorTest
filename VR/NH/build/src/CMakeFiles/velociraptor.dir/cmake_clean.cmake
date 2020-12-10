@@ -21,14 +21,14 @@ file(REMOVE_RECURSE
   "CMakeFiles/velociraptor.dir/omproutines.cxx.o"
   "CMakeFiles/velociraptor.dir/ramsesio.cxx.o"
   "CMakeFiles/velociraptor.dir/search.cxx.o"
-  "CMakeFiles/velociraptor.dir/swiftinterface.cxx.o"
   "CMakeFiles/velociraptor.dir/substructureproperties.cxx.o"
+  "CMakeFiles/velociraptor.dir/swiftinterface.cxx.o"
   "CMakeFiles/velociraptor.dir/tipsyio.cxx.o"
   "CMakeFiles/velociraptor.dir/ui.cxx.o"
   "CMakeFiles/velociraptor.dir/unbind.cxx.o"
   "CMakeFiles/velociraptor.dir/utilities.cxx.o"
-  "libvelociraptor.pdb"
   "libvelociraptor.a"
+  "libvelociraptor.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

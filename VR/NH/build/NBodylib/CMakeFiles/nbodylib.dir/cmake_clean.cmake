@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "libnbodylib.pdb"
   "libnbodylib.a"
+  "libnbodylib.pdb"
 )
 
 # Per-language clean rules from dependency scanning.
