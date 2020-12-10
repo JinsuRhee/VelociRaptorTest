@@ -2,8 +2,9 @@ FUNCTION f_rdptcl, settings, gid, $
 	p_pos=p_pos, p_vel=p_vel, p_gyr=p_gyr, p_sfactor=p_sfactor, $
 	p_mass=p_mass, p_flux=p_flux, p_metal=p_metal, $
 	flux_list=flux_list, $
-	num_thread=num_thread, n_snap=n_snap, longint=longint, raw=raw, yzics=yzics, alldom=alldom, $
-	boxrange=boxrange
+	num_thread=num_thread, n_snap=n_snap, longint=longint, raw=raw, alldom=alldom, $
+	boxrange=boxrange, dir=dir, $
+	yzics=yzics, nh=nh
 
 	;;-----
 	;; Settings
@@ -14,9 +15,11 @@ FUNCTION f_rdptcl, settings, gid, $
 	;;-----
 	;; Read Particle IDs & Domain & Center & Radius
 	;;-----
-	fname	= dir_save + 'VR_Galaxy/' + 'snap_' + $
-		string(n_snap,format='(I3.3)') + '/GAL_' + $
-		string(gid,format='(I6.6)') + '.hdf5'
+	IF ~KEYWORD_SET(dir) THEN $
+		dir	= dir_save + 'VR_Galaxy/snap_' + string(n_snap,format='(I3.3)') + '/'
+	
+	fname	= dir + 'GAL_' + string(gid,format='(I6.6)') + '.hdf5'
+
 	fid = H5F_OPEN(fname) & did = H5D_OPEN(fid, '/P_Prop/P_ID')
 	pid = H5D_READ(did) & H5D_CLOSE, did & H5F_CLOSE, fid
 
@@ -67,6 +70,7 @@ FUNCTION f_rdptcl, settings, gid, $
 			larr(3)	= num_thread
 			larr(10)= strlen(dir_raw)
 			IF KEYWORD_SET(yzics) THEN larr(18) = 100L
+			IF KEYWORD_SET(nh) THEN larr(18) = 100L
 			IF KEYWORD_SET(longint) THEN larr(19)= 100L
 
 		void	= call_external(ftr_name, 'get_ptcl', $

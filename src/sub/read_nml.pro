@@ -32,11 +32,17 @@ Pro read_nml, settings, file=file
 
 	IF settings.simname EQ 'NH' THEN BEGIN
 		;dir_catalog     = '/storage5/FORNAX/VELOCI_RAPTOR/' + STRTRIM(settings.cname,2) + '/galaxy/'
-		dir_catalog	= '/storage6/jinsu/NH/galaxy/'
-		IF settings.P_VRrun_horg EQ 'h' THEN $
-			dir_catalog = '/storage6/jinsu/NH/halo/'
+		;dir_catalog	= '/storage6/jinsu/NH/galaxy/'
+		dir_catalog	= '/storage5/NewHorizon/VELOCIraptor/Galaxy/'
 		dir_raw         = '/storage1/NewHorizon/snapshots/'
-		dir_save        = '/storage1/NewHorizon/Vraptor/'
+		;dir_save        = '/storage1/NewHorizon/Vraptor/'
+		dir_save	= '/storage5/NewHorizon/VELOCIraptor/'
+
+		IF settings.P_VRrun_horg EQ 'h' THEN BEGIN
+			dir_catalog	= '/storage5/NewHorizon/VELOCIraptor/Halo/'
+			dir_save	= '/storage5/NewHorizon/VELOCIraptor/snap_halo/'
+		ENDIF
+
 	ENDIF
 
 	IF settings.simname EQ 'YZiCS' THEN BEGIN

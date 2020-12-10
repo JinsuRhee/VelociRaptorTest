@@ -46,7 +46,7 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 	;; Matching Start
 	;;-----
 	n_nomatch	= N_ELEMENTS(WHERE(rate LT 0.8))
-	match_cutval	= 0.95
+	match_cutval	= 0.9999
 	N_itr = 0L & N_itrmax = 10L & dfact = 10.0
 
 	dmp_mass	= 1./(4096.^3) * (siminfo.omega_m - siminfo.omega_b) / siminfo.omega_m
@@ -97,6 +97,10 @@ PRO rv_ptmatch, output, output2, dir_snap=dir_snap, dir_raw=dir_raw, dir_lib=dir
 				larr(0) = n_elements(xc2)
 				larr(1) = n_mpi
 				larr(2)	= num_thread
+
+				IF dfact GE 100. THEN $
+					darr(0) = dfact / (max(rr2) * siminfo.unit_l / 3.086d21)
+					;; Search in Physical Radius
 
 				darr(0) = dfact		;; Radius factor
 
