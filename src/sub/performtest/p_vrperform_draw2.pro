@@ -6,14 +6,14 @@ PRO p_vrperform_draw2, settings, data, eps=eps
 	dsize	= [800., 800.]
 	width	= 0.8
 	height	= width * dsize(0)/dsize(1)
-	hgap	= 0.15
+	hgap	= 0.16
 	vgap 	= 0.12
 
 	IF settings.P_VRPerform_eps THEN $
 		cgPS_open, settings.root_path + 'images/' + settings.P_VRPerform_draw2_iname, /encapsulated
 
 	cgDisplay, dsize(0), dsize(1)
-	!p.font = -1 & !p.charsize=1.5 & !p.charthick=3.0
+	!p.font = -1 & !p.charsize=2.0 & !p.charthick=5.0
 
 	xr	= [1e8, 1e11]
 	yr	= [1e6, 1e11]

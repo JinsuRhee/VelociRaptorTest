@@ -1,7 +1,16 @@
 PRO p_vrperform_draw3_pan3sub, data, pos=pos, xr=xr, yr=yr, symcolor=symcolor, symsize=symsize
 
+	cut	= WHERE(data.xox.fof3d.ltime / data.xxx.fof3d.ltime GT yr(1))
 	cgOplot, data.xxx.fof3d.ngroup, data.xox.fof3d.ltime / data.xxx.fof3d.ltime, psym=16, symsize=symsize, color=symcolor(0)
+	IF MAX(cut) GE 0L THEN $
+		cgOplot, data.xxx.fof3d.ngroup(cut), FLTARR(N_ELEMENTS(cut))*0.0 + yr(1), $
+		psym=49, color=symcolor(0), symsize=1.5
+
+	cut	= WHERE(data.xox.fof6d.ltime / data.xxx.fof6d.ltime GT yr(1))
 	cgOplot, data.xxx.fof6d.ngroup, data.xox.fof6d.ltime / data.xxx.fof6d.ltime, psym=16, symsize=symsize, color=symcolor(1)
+	IF MAX(cut) GE 0L THEN $
+		cgOplot, data.xxx.fof6d.ngroup(cut), FLTARR(N_ELEMENTS(cut))*0.0 + yr(1), $
+		psym=49, color=symcolor(1), symsize=1.5
 
 	cgOplot, xr, [1., 1.], linestyle=1, thick=3, color='dark grey'
 	cgAxis, xaxis=0, xstyle=1, xrange=xr, xtickv=[1e5, 1e6, 1e7, 1e8], xtickn=[' ', ' ' , ' ', ' '], /xlog, xticklen=0.06, /save

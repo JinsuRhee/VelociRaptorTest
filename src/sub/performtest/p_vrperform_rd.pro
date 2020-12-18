@@ -4,9 +4,9 @@ data	= {name:'name'}
 
 IF ~KEYWORD_SET(SKIP) THEN BEGIN
 	dumname	= ['o', 'x']
-	FOR i0=1L, 1L DO BEGIN
-	FOR i1=1L, 1L DO BEGIN
-	FOR i2=1L, 1L DO BEGIN
+	FOR i0=0L, 1L DO BEGIN
+	FOR i1=0L, 1L DO BEGIN
+	FOR i2=0L, 1L DO BEGIN
 		tmp_name	= $
 			STRTRIM(dumname(i0),2) + $
 			STRTRIM(dumname(i1),2) + $
@@ -69,11 +69,18 @@ IF ~KEYWORD_SET(SKIP) THEN BEGIN
 				n_ptcl	= STRSPLIT(dum(2), ':', /extract)
 				n_ptcl	= LONG(n_ptcl(1))
 
+				cut	= WHERE(fofarr(n_dim,2L,*) EQ n_ptcl)
 				FOR j=0L, N_ELEMENTS(dum)-1L DO BEGIN
+					IF STRPOS(dum(j), 'Time') LT 0L THEN BEGIN
+						dumtmp	= STRSPLIT(dum(j), ':', /extract)
+						IF DOUBLE(dumtmp(1)) NE DOUBLE(fofarr(n_dim,j,cut)) THEN BEGIN
+							fofarr(n_dim,j,cut) = dumtmp(1)
+							;print, tmp_name
+						ENDIF
+					ENDIF
 					IF STRPOS(dum(j), 'Total Time') GE 0L THEN BEGIN
 						tot_time	= STRSPLIT(dum(j), ':', /extract)
 						tot_time	= DOUBLE(tot_time(1))
-						cut	= WHERE(fofarr(n_dim,2L,*) EQ n_ptcl)
 						fofarr(n_dim,j,cut) = tot_time
 						BREAK
 					ENDIF
@@ -140,7 +147,6 @@ IF ~KEYWORD_SET(SKIP) THEN BEGIN
 		dum	= {fof3d:fof3d, fof6d:fof6d, total_time:run_time}
 		data	= CREATE_STRUCT(data,tmp_name,dum)
 
-		STOP
 		;a	= linfit(alog10(fof3d.ngroup), alog10(fof3d.time))
 		;b	= linfit(alog10(fof6d.ngroup), alog10(fof6d.time))
 		;IF tmp_name eq 'xxxxx' THEN STOP
@@ -149,6 +155,7 @@ IF ~KEYWORD_SET(SKIP) THEN BEGIN
 	ENDFOR
 	ENDFOR
 
+	SAVE, filename='/storage6/jinsu/var/Paper5*/data.sav', data
 ENDIF ELSE BEGIN
 
 	RESTORE, '/storage6/jinsu/var/Paper5*/data.sav'
