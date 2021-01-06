@@ -15,7 +15,7 @@ PRO p_vrperform_draw3_pan1sub, data, pos=pos, xr=xr, yr=yr, symcolor=symcolor, s
 	cgOplot, xr, [1., 1.], linestyle=1, thick=3, color='dark grey'
 	cgAxis, xaxis=0, xstyle=1, xrange=xr, xtickv=[1e5, 1e6, 1e7, 1e8], xtickn=[' ', ' ' , ' ', ' '], /xlog, xticklen=0.06, /save
 	cgAxis, yaxis=0, ystyle=1, yrange=yr, ytickv=[0., 0.5, 1.0], ytickn=['0.00', '0.50', '1.00'], yticks=2, $
-		yminor=5, ytitle='Frac', /save
+		yminor=5, ytitle='Frac-', /save
 	cgAxis, xaxis=1, xstyle=1, xrange=xr*8512.4066, xticklen=0.06, /xlog, /save
 	cgAxis, yaxis=1, ystyle=1, yrange=yr, ytickv=[0., 0.5, 1.0], ytickn=[' ', ' ', ' '], yticks=2, $
 		yminor=5, /save

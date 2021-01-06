@@ -33,8 +33,8 @@ PRO p_vrperform_draw5, settings, data, eps=eps
 	;; Panel A sub
 	;;-----
 	pos	= [hgap, vgap, hgap, vgap] + [0., height, 0., height] + [0., 0., width, height/3.]
-	cgPlot, 0, 0, /nodata, xrange=xr, yrange=yr2, position=pos, /noerase, /xlog, xstyle=4, $
-		ytickv=[0., 0.5, 1.0], ytickn=['0.00', '0.50', '1.00'], yticks=2, yminor=5, ytitle='Rel- Time'
+	cgPlot, 0, 0, /nodata, xrange=xr, yrange=yr2, position=pos, /noerase, /xlog, xstyle=4, ystyle=4
+		;ytickv=[0., 0.5, 1.0], ytickn=['0.00', '0.50', '1.00'], yticks=2, yminor=5, ytitle='Rel- Time'
 
 	P_VRPerform_draw5_pan1sub, data, pos=pos, xr=xr, yr=yr2, symcolor=orgcolor, symsize=symsize2
 

@@ -7,8 +7,8 @@ PRO P_VRPerform_draw1_pan1, data, xr, yr
 		b	= LINFIT(ALOG10(data.xxx.fof6d.ngroup), ALOG10(data.xxx.fof6d.time))
 		xx	= FINDGEN(100)/99. * 2.0 + 5.0
 
-	cgOplot, 10^xx, 10^(a(0) + a(1)*xx), linestyle=2, thick=4, color='YGB5'
-	cgOplot, 10^xx, 10^(b(0) + b(1)*xx), linestyle=2, thick=4, color='orange red'
+	cgOplot, 10^xx, 10^(a(0) + a(1)*xx), linestyle=2, thick=6, color='YGB5'
+	cgOplot, 10^xx, 10^(b(0) + b(1)*xx), linestyle=2, thick=6, color='orange red'
 
 	print, a(1), b(1)
 	;cgLegend, /center_sym, /data, colors=['white', 'white'], $
